@@ -66,14 +66,14 @@ export function CategoryEditModal({
 
   return (
     <>
-      <Modal open={open} onClose={onClose} title="카테고리 편집" fullScreen>
+      <Modal open={open} onClose={onClose} title="카테고리 편집" fullHeight>
         <button
           type="button"
           onClick={() => {
             setEditCat(null);
             setFormOpen(true);
           }}
-          className="mb-4 w-full rounded-lg border border-dashed border-slate-300 py-2 text-sm font-medium text-slate-700"
+          className="mb-4 w-full rounded-xl border border-dashed border-line-strong py-2.5 text-sm font-medium text-ink-muted transition-colors hover:bg-accent-soft"
         >
           + 카테고리 추가
         </button>
@@ -81,14 +81,14 @@ export function CategoryEditModal({
           {list.map((cat, i) => (
             <li
               key={cat.id}
-              className="flex items-center gap-2 rounded-lg border border-slate-200 p-3"
+              className="flex items-center gap-2 rounded-card border border-line bg-surface p-3 shadow-card"
             >
               <div className="flex flex-col gap-1">
                 <button
                   type="button"
                   disabled={i === 0}
                   onClick={() => move(i, -1)}
-                  className="text-xs text-slate-500 disabled:opacity-30"
+                  className="text-xs text-ink-faint disabled:opacity-30"
                   aria-label="위로"
                 >
                   ▲
@@ -97,7 +97,7 @@ export function CategoryEditModal({
                   type="button"
                   disabled={i === list.length - 1}
                   onClick={() => move(i, 1)}
-                  className="text-xs text-slate-500 disabled:opacity-30"
+                  className="text-xs text-ink-faint disabled:opacity-30"
                   aria-label="아래로"
                 >
                   ▼
@@ -105,7 +105,7 @@ export function CategoryEditModal({
               </div>
               <button
                 type="button"
-                className="flex-1 text-left font-medium"
+                className="flex-1 text-left font-medium text-ink"
                 onClick={() => {
                   setEditCat(cat);
                   setFormOpen(true);
@@ -116,7 +116,7 @@ export function CategoryEditModal({
               <button
                 type="button"
                 onClick={() => setDeleteId(cat.id)}
-                className="text-sm text-red-600"
+                className="text-sm text-danger hover:text-danger-hover"
               >
                 삭제
               </button>
@@ -124,7 +124,7 @@ export function CategoryEditModal({
           ))}
         </ul>
         {deleteError && (
-          <p className="mt-4 text-sm text-red-600">{deleteError}</p>
+          <p className="mt-4 text-sm text-danger">{deleteError}</p>
         )}
       </Modal>
 

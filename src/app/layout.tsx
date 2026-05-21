@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
+import { Noto_Sans_KR } from "next/font/google";
 import { DataProvider } from "@/contexts/DataContext";
 import { BottomNav } from "@/components/layout/BottomNav";
 import "./globals.css";
+
+const notoSansKr = Noto_Sans_KR({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "LifeCycle",
@@ -14,10 +22,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
-      <body className="antialiased">
+    <html lang="ko" className={notoSansKr.variable}>
+      <body>
         <DataProvider>
-          <main className="mx-auto min-h-dvh max-w-lg pb-20">{children}</main>
+          <main className="mx-auto min-h-dvh max-w-lg pb-24">{children}</main>
           <BottomNav />
         </DataProvider>
       </body>

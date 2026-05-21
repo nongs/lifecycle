@@ -1,7 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo } from "react";
 import { useData } from "@/contexts/DataContext";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { PageLoading } from "@/components/ui/PageLoading";
 import { formatCycleDays } from "@/lib/utils/cycle";
 import {
   averageActualCycleDays,
@@ -53,68 +58,59 @@ export default function StatsPage() {
   }, [stats.monthRows]);
 
   if (!ready) {
-    return (
-      <div className="flex min-h-[50dvh] items-center justify-center text-slate-500">
-        불러오는 중…
-      </div>
-    );
+    return <PageLoading />;
   }
 
   return (
     <div className="px-4 pt-6">
       <header className="mb-6">
-        <h1 className="text-xl font-bold text-slate-900">통계</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          실제 기록을 바탕으로 한 요약입니다.
-        </p>
+        <h1 className="page-header-title">통계</h1>
+        <p className="page-header-sub">실제 기록을 바탕으로 한 요약입니다.</p>
       </header>
 
-      <section
-        className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-        aria-label="요약"
-      >
-        <h2 className="text-sm font-semibold text-slate-800">요약</h2>
-        <ul className="mt-3 space-y-2 text-sm text-slate-600">
+      <Card className="mb-6 p-4" aria-label="요약">
+        <h2 className="text-sm font-semibold text-ink">요약</h2>
+        <ul className="mt-3 space-y-2 text-sm text-ink-muted">
           <li>전체 수행 기록: {stats.totalLogs}건</li>
           <li>비용이 입력된 기록: {stats.logsWithCostCount}건</li>
           <li>
             이번 달({stats.ym}) 비용 합계:{" "}
-            <span className="font-semibold text-slate-900">
+            <span className="font-semibold text-ink">
               {stats.thisMonthSpend.toLocaleString()}원
             </span>
           </li>
         </ul>
-      </section>
+      </Card>
 
       <section className="mb-6" aria-labelledby="monthly-spend-heading">
         <h2
           id="monthly-spend-heading"
-          className="mb-3 text-sm font-semibold text-slate-800"
+          className="mb-3 text-sm font-semibold text-ink"
         >
           월별 비용
         </h2>
         {stats.monthRows.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-            비용이 입력된 기록이 없습니다. 항목 완료 시 비용 입력을 켜 보세요.
-          </p>
+          <EmptyState
+            illustration="cost"
+            title="비용이 입력된 기록이 없습니다"
+            description="대시보드에서 항목 완료 시 비용 입력을 켜면 월별·항목별 비용이 집계됩니다"
+          />
         ) : (
           <ul className="space-y-3">
             {stats.monthRows.slice(0, 12).map((row) => (
-              <li key={row.yearMonth} className="rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-100">
-                <div className="mb-1 flex justify-between text-sm">
-                  <span className="font-medium text-slate-800">
-                    {row.yearMonth}
-                  </span>
-                  <span className="text-slate-900">
+              <li key={row.yearMonth} className="card p-3">
+                <div className="mb-1.5 flex justify-between text-sm">
+                  <span className="font-medium text-ink">{row.yearMonth}</span>
+                  <span className="text-ink-muted">
                     {row.total.toLocaleString()}원
                   </span>
                 </div>
                 <div
-                  className="h-2 overflow-hidden rounded-full bg-slate-100"
+                  className="h-2 overflow-hidden rounded-full bg-line"
                   role="presentation"
                 >
                   <div
-                    className="h-full rounded-full bg-slate-800"
+                    className="h-full rounded-full bg-primary transition-all duration-300"
                     style={{
                       width: `${Math.min(100, (row.total / maxMonthSpend) * 100)}%`,
                     }}
@@ -129,14 +125,19 @@ export default function StatsPage() {
       <section aria-labelledby="per-item-heading">
         <h2
           id="per-item-heading"
-          className="mb-3 text-sm font-semibold text-slate-800"
+          className="mb-3 text-sm font-semibold text-ink"
         >
           항목별
         </h2>
         {items.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            활성 항목이 없습니다. 항목 관리에서 추가해 주세요.
-          </p>
+          <EmptyState
+            title="활성 항목이 없습니다"
+            description="항목 관리에서 추가하면 항목별 통계를 확인할 수 있습니다"
+          >
+            <Link href="/items">
+              <Button>항목 관리로 이동</Button>
+            </Link>
+          </EmptyState>
         ) : (
           <ul className="flex flex-col gap-2">
             {stats.perItem.map(
@@ -147,15 +148,12 @@ export default function StatsPage() {
                 targetDays,
                 totalSpend,
               }) => (
-                <li
-                  key={item.id}
-                  className="rounded-xl border border-slate-200 bg-white p-4 text-sm"
-                >
-                  <div className="font-semibold text-slate-900">{item.name}</div>
-                  <div className="mt-0.5 text-xs text-slate-500">
+                <li key={item.id} className="card p-4 text-sm">
+                  <div className="item-title">{item.name}</div>
+                  <div className="mt-1 text-xs text-ink-faint">
                     {categoryName(item.categoryId)}
                   </div>
-                  <dl className="mt-3 space-y-1 text-slate-600">
+                  <dl className="mt-3 space-y-1 text-ink-muted">
                     <div className="flex justify-between gap-2">
                       <dt>목표 주기</dt>
                       <dd>{formatCycleDays(targetDays)}</dd>

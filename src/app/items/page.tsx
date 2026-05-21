@@ -13,6 +13,9 @@ import { formatCycleDays } from "@/lib/utils/cycle";
 import { URGENCY_LABELS } from "@/lib/utils/itemStatus";
 import { AddItemButton } from "@/components/items/AddItemButton";
 import { ItemsEmptyState } from "@/components/items/ItemsEmptyState";
+import { Button } from "@/components/ui/Button";
+import { Chip } from "@/components/ui/Chip";
+import { PageLoading } from "@/components/ui/PageLoading";
 import { buildItemViewModel } from "@/lib/utils/dashboard";
 import type { ItemViewModel, ManagementItem } from "@/lib/types";
 
@@ -74,62 +77,44 @@ export default function ItemsPage() {
   };
 
   if (!ready) {
-    return (
-      <div className="flex min-h-[50dvh] items-center justify-center text-slate-500">
-        불러오는 중…
-      </div>
-    );
+    return <PageLoading />;
   }
 
   return (
     <div className="px-4 pt-6">
       <header className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-slate-900">항목 관리</h1>
-        <button
-          type="button"
-          onClick={() => setCategoryEditOpen(true)}
-          className="shrink-0 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-        >
+        <h1 className="page-header-title">항목 관리</h1>
+        <Button variant="secondary" className="shrink-0 px-3 py-2" onClick={() => setCategoryEditOpen(true)}>
           카테고리 편집
-        </button>
+        </Button>
       </header>
 
       <div className="-mx-4 mb-4 overflow-x-auto px-4 pb-1">
         <div className="flex flex-nowrap gap-2" role="tablist" aria-label="카테고리 필터">
-          <button
-            type="button"
+          <Chip
             role="tab"
             aria-selected={filterId === "all"}
+            active={filterId === "all"}
             onClick={() => setFilterId("all")}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-sm ${
-              filterId === "all"
-                ? "bg-slate-900 text-white"
-                : "bg-slate-100 text-slate-700"
-            }`}
           >
             전체
-          </button>
+          </Chip>
           {categories.map((c) => (
-            <button
+            <Chip
               key={c.id}
-              type="button"
               role="tab"
               aria-selected={filterId === c.id}
+              active={filterId === c.id}
               onClick={() => setFilterId(c.id)}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-sm ${
-                filterId === c.id
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-100 text-slate-700"
-              }`}
             >
               {c.name}
-            </button>
+            </Chip>
           ))}
         </div>
       </div>
 
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-xs text-slate-500">정렬: 생성일 (최신순)</p>
+      <div className="mb-4 flex items-end justify-between gap-3">
+        <p className="pb-0.5 text-xs text-ink-faint">정렬: 생성일 (최신순)</p>
         <AddItemButton onClick={openAddItem} />
       </div>
 
@@ -150,12 +135,12 @@ export default function ItemsPage() {
             {activeSorted.map((vm) => (
             <li
               key={vm.item.id}
-              className="rounded-xl border border-slate-200 bg-white p-4"
+              className="card p-4"
             >
               <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h3 className="font-semibold">{vm.item.name}</h3>
-                  <p className="text-xs text-slate-500">
+                <div className="min-w-0 flex-1 px-1">
+                  <h3 className="item-title mb-2">{vm.item.name}</h3>
+                  <p className="text-xs text-ink-muted">
                     {vm.categoryName} · {formatCycleDays(vm.item.targetCycleDays)}{" "}
                     · {URGENCY_LABELS[vm.urgency]}
                   </p>
@@ -164,14 +149,14 @@ export default function ItemsPage() {
                   <button
                     type="button"
                     onClick={() => setDetailItem(vm.item)}
-                    className="rounded-lg border border-slate-300 px-2 py-1 text-xs"
+                    className="rounded-xl border border-line-strong px-2.5 py-1 text-xs text-ink-muted hover:bg-accent-soft"
                   >
                     상세
                   </button>
                   <button
                     type="button"
                     onClick={() => setMenuItem(vm.item)}
-                    className="rounded-lg border border-slate-300 px-2 py-1 text-xs"
+                    className="rounded-xl border border-line-strong px-2.5 py-1 text-xs text-ink-muted hover:bg-accent-soft"
                     aria-label="더보기"
                   >
                     ⋮
@@ -189,19 +174,19 @@ export default function ItemsPage() {
 
       {archivedVMs.length > 0 && (
         <section className="mt-8">
-          <h2 className="mb-2 text-sm font-semibold text-slate-500">아카이브</h2>
+          <h2 className="mb-2 text-sm font-semibold text-ink-faint">아카이브</h2>
           <ul className="flex flex-col gap-2">
             {archivedVMs.map((vm) =>
               vm ? (
                 <li
                   key={vm.item.id}
-                  className="rounded-xl border border-slate-200 bg-slate-50 p-4 opacity-80"
+                  className="card-muted p-4 opacity-90"
                 >
-                  <p className="font-medium">{vm.item.name}</p>
+                  <p className="font-medium text-ink-muted">{vm.item.name}</p>
                   <div className="mt-2 flex gap-2">
                     <button
                       type="button"
-                      className="text-sm text-slate-700 underline"
+                      className="text-sm text-ink-muted underline"
                       onClick={() =>
                         setConfirm({ type: "restore", item: vm.item })
                       }
@@ -210,7 +195,7 @@ export default function ItemsPage() {
                     </button>
                     <button
                       type="button"
-                      className="text-sm text-red-600"
+                      className="text-sm text-danger"
                       onClick={() =>
                         setConfirm({ type: "delete", item: vm.item })
                       }
@@ -226,13 +211,19 @@ export default function ItemsPage() {
       )}
 
       {menuItem && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
-          <div className="w-full max-w-lg rounded-t-2xl bg-white p-4">
-            <p className="mb-3 font-medium">{menuItem.name}</p>
-            <div className="flex flex-col gap-2">
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <button
+            type="button"
+            className="absolute inset-0 bg-overlay/30"
+            aria-label="메뉴 닫기"
+            onClick={() => setMenuItem(null)}
+          />
+          <div className="relative z-10 w-full max-w-lg rounded-t-modal bg-surface px-2 pb-4 pt-3 shadow-modal">
+            <p className="item-title mb-2 px-3">{menuItem.name}</p>
+            <div className="flex flex-col gap-0.5">
               <button
                 type="button"
-                className="rounded-lg py-2 text-left text-sm"
+                className="menu-action"
                 onClick={() => {
                   setEditItem(menuItem);
                   setItemFormOpen(true);
@@ -243,7 +234,7 @@ export default function ItemsPage() {
               </button>
               <button
                 type="button"
-                className="rounded-lg py-2 text-left text-sm"
+                className="menu-action"
                 onClick={() => {
                   setLogItem(menuItem);
                   setMenuItem(null);
@@ -253,7 +244,7 @@ export default function ItemsPage() {
               </button>
               <button
                 type="button"
-                className="rounded-lg py-2 text-left text-sm text-amber-800"
+                className="menu-action-danger"
                 onClick={async () => {
                   await api.archiveItem(menuItem.id);
                   setMenuItem(null);
@@ -264,7 +255,7 @@ export default function ItemsPage() {
               </button>
               <button
                 type="button"
-                className="rounded-lg py-2 text-left text-sm"
+                className="menu-action text-ink-faint"
                 onClick={() => setMenuItem(null)}
               >
                 닫기

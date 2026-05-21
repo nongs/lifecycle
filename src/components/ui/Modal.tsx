@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
-type ModalProps = {
+type Props = {
   open: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  fullScreen?: boolean;
+  fullHeight?: boolean;
 };
 
 export function Modal({
@@ -15,8 +15,10 @@ export function Modal({
   onClose,
   title,
   children,
-  fullScreen = false,
-}: ModalProps) {
+  fullHeight = false,
+}: Props) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -32,9 +34,9 @@ export function Modal({
 
   if (!open) return null;
 
-  const panelClass = fullScreen
-    ? "h-[92dvh] max-h-[92dvh] rounded-t-2xl sm:h-[85vh] sm:max-w-lg sm:rounded-2xl"
-    : "max-h-[85dvh] max-w-md rounded-t-2xl sm:rounded-2xl";
+  const panelClass = fullHeight
+    ? "h-[92dvh] max-h-[92dvh] rounded-t-modal sm:h-[85vh] sm:max-w-lg sm:rounded-modal"
+    : "max-h-[85dvh] max-w-md rounded-t-modal sm:rounded-modal";
 
   return (
     <div
@@ -45,21 +47,22 @@ export function Modal({
     >
       <button
         type="button"
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-overlay/30"
         aria-label="닫기"
         onClick={onClose}
       />
       <div
-        className={`relative z-10 flex w-full flex-col bg-white shadow-xl ${panelClass}`}
+        ref={panelRef}
+        className={`relative z-10 flex w-full flex-col bg-surface shadow-modal ${panelClass}`}
       >
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-          <h2 id="modal-title" className="text-lg font-semibold text-slate-900">
+        <div className="flex items-center justify-between border-b border-line px-4 py-3.5">
+          <h2 id="modal-title" className="text-lg font-semibold text-ink">
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100"
+            className="rounded-xl px-2.5 py-1 text-ink-faint transition-colors hover:bg-accent-soft hover:text-ink-muted"
             aria-label="닫기"
           >
             ✕

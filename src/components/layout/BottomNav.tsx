@@ -14,8 +14,8 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)]"
-      aria-label="주요 메뉴"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_24px_-8px_rgb(58_54_48/0.08)] backdrop-blur-sm"
+      aria-label="주 메뉴"
     >
       <div className="mx-auto flex max-w-lg">
         {links.map(({ href, label }) => {
@@ -27,8 +27,8 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
-              className={`flex flex-1 flex-col items-center py-2.5 text-xs font-medium sm:text-sm ${
-                active ? "text-slate-900" : "text-slate-500"
+              className={`flex flex-1 flex-col items-center py-3 text-xs font-medium transition-colors sm:text-sm ${
+                active ? "text-primary" : "text-ink-faint hover:text-ink-muted"
               }`}
               aria-current={active ? "page" : undefined}
             >

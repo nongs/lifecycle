@@ -253,7 +253,11 @@ const DEPLOY_BASE_PATH = "/lifecycle";
 | :---: | :--- | :---: |
 | 1 | MVP — 대시보드·항목·카테고리·로그·localStorage | ✅ |
 | 2 | 통계 — 평균 주기, 비용 집계 (`/stats`) | ✅ |
-| 3 | 고도화 — Auth, 클라우드 DB, 알림, PWA, 마이페이지 | 예정 |
+| A-1 | 디자인 마무리 (토큰·UI·Empty·모바일 QA) | ✅ |
+| A-2 | **demo/cloud 이중 빌드** 분기 | 예정 |
+| 3 | 고도화 — Auth, 클라우드 DB, 알림, PWA, 마이페이지 (`cloud`만) | 예정 |
+
+상세 단계·체크리스트: [LifeCycle_Design_And_Fullstack_Roadmap.md](./markdown/LifeCycle_Design_And_Fullstack_Roadmap.md)
 
 ---
 
@@ -268,6 +272,7 @@ const DEPLOY_BASE_PATH = "/lifecycle";
 | [LifeCycle_Screen_Plan.md](./markdown/LifeCycle_Screen_Plan.md) | 화면·플로우·IA |
 | [LifeCycle_MVP_Checklist.md](./markdown/LifeCycle_MVP_Checklist.md) | MVP 구현 체크리스트 |
 | [LifeCycle_Stats_Plan.md](./markdown/LifeCycle_Stats_Plan.md) | 통계 화면·집계 규칙 |
+| [LifeCycle_Design_And_Fullstack_Roadmap.md](./markdown/LifeCycle_Design_And_Fullstack_Roadmap.md) | 디자인 마무리 · demo/cloud 이중 배포 · 풀스택 단계 |
 
 ### 참고·영감
 

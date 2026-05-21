@@ -2,13 +2,132 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ——— Design tokens (편안한 웜 톤) ——— */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --canvas: 247 243 237;
+  --surface: 255 252 247;
+  --surface-muted: 250 246 240;
+  --ink: 58 54 48;
+  --ink-muted: 107 100 92;
+  --ink-faint: 150 143 133;
+  --line: 232 225 215;
+  --line-strong: 210 201 188;
+  --primary: 88 118 98;
+  --primary-hover: 72 98 82;
+  --primary-foreground: 255 255 255;
+  --accent-soft: 240 236 228;
+  --overlay: 58 54 48;
+
+  --status-overdue-bg: 253 244 243;
+  --status-overdue-border: 245 213 210;
+  --status-overdue-text: 154 74 72;
+  --status-overdue-bar: 196 88 82;
+  --status-overdue-track: 245 210 206;
+
+  --status-soon-bg: 253 248 239;
+  --status-soon-border: 245 230 200;
+  --status-soon-text: 138 109 58;
+  --status-soon-bar: 218 162 68;
+  --status-soon-track: 245 228 190;
+
+  --status-ok-bg: 242 248 244;
+  --status-ok-border: 213 232 220;
+  --status-ok-text: 74 107 85;
+  --status-ok-bar: 82 158 108;
+  --status-ok-track: 210 232 218;
+
+  --status-neutral-bg: 245 243 239;
+  --status-neutral-border: 232 225 215;
+  --status-neutral-text: 107 100 92;
+  --status-neutral-bar: 196 189 178;
+
+  --danger: 180 72 68;
+  --danger-hover: 154 58 54;
+  --warning-border: 232 210 160;
+  --warning-text: 138 100 48;
+
+  --radius-card: 1rem;
+  --radius-modal: 1.25rem;
+  --shadow-card: 0 1px 2px rgb(58 54 48 / 0.04), 0 6px 20px -4px rgb(58 54 48 / 0.07);
+  --shadow-modal: 0 12px 40px -8px rgb(58 54 48 / 0.12);
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  min-height: 100dvh;
+@layer base {
+  body {
+    @apply bg-canvas text-ink antialiased;
+    min-height: 100dvh;
+    line-height: 1.55;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight text-ink;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-card border border-line bg-surface shadow-card;
+  }
+
+  .card-muted {
+    @apply rounded-card border border-line bg-surface-muted;
+  }
+
+  .card-dashed {
+    @apply rounded-card border border-dashed border-line-strong bg-surface;
+  }
+
+  .input-field,
+  .select-field,
+  .textarea-field {
+    @apply w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink
+      placeholder:text-ink-faint transition-colors
+      focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20;
+  }
+
+  .textarea-field {
+    @apply resize-y min-h-[5rem];
+  }
+
+  .label-text {
+    @apply text-sm font-medium text-ink-muted;
+  }
+
+  .page-loading {
+    @apply flex min-h-[50dvh] items-center justify-center text-ink-faint;
+  }
+
+  .page-header-title {
+    @apply text-xl font-semibold text-ink;
+  }
+
+  .page-header-sub {
+    @apply mt-1 text-sm text-ink-muted;
+  }
+
+  .item-title {
+    @apply text-lg font-semibold leading-snug text-ink;
+  }
+
+  .chip {
+    @apply shrink-0 rounded-full px-3.5 py-2 text-sm font-medium transition-colors;
+  }
+
+  .chip-active {
+    @apply bg-primary text-primary-foreground shadow-sm;
+  }
+
+  .chip-inactive {
+    @apply bg-accent-soft text-ink-muted hover:bg-line/60;
+  }
+
+  .menu-action {
+    @apply w-full rounded-xl px-3 py-2.5 text-left text-sm text-ink-muted transition-colors hover:bg-accent-soft;
+  }
+
+  .menu-action-danger {
+    @apply menu-action font-medium text-danger hover:bg-status-overdue-bg;
+  }
 }

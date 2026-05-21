@@ -1,11 +1,12 @@
 "use client";
 
-import type { ItemViewModel } from "@/lib/types";
 import { ItemStatusDisplay } from "@/components/items/ItemStatusDisplay";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import type { ItemViewModel } from "@/lib/types";
 
 function formatMetrics(vm: ItemViewModel): string {
-  if (!vm.lastPerformedAt) return "기록이 없습니다";
-  if (vm.urgency === "done_today") return "오늘 수행했습니다";
+  if (!vm.lastPerformedAt || vm.urgency === "done_today") return "";
   if (vm.urgency === "overdue" && vm.elapsedDays !== null) {
     const over = vm.elapsedDays - vm.item.targetCycleDays;
     return `${over}일 지남`;
@@ -22,28 +23,27 @@ type Props = {
 };
 
 export function DashboardItemCard({ vm, onComplete }: Props) {
+  const metrics = formatMetrics(vm);
+
   return (
-    <article
-      className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-      aria-label={`${vm.item.name} 항목`}
-    >
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <div>
-          <span className="mb-1 inline-block rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+    <Card className="p-4" aria-label={`${vm.item.name} 항목`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <span className="mb-1.5 inline-block rounded-lg bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-ink-muted">
             {vm.categoryName}
           </span>
-          <h3 className="font-semibold text-slate-900">{vm.item.name}</h3>
+          <h3 className="item-title">{vm.item.name}</h3>
         </div>
-        <button
-          type="button"
-          onClick={onComplete}
-          className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
-        >
+        <Button className="shrink-0 px-3 py-2" onClick={onComplete}>
           완료
-        </button>
+        </Button>
       </div>
-      <ItemStatusDisplay vm={vm} />
-      <p className="mt-2 text-sm text-slate-500">{formatMetrics(vm)}</p>
-    </article>
+      <div className="mt-3">
+        <ItemStatusDisplay vm={vm} />
+      </div>
+      {metrics ? (
+        <p className="mt-2.5 text-sm text-ink-muted">{metrics}</p>
+      ) : null}
+    </Card>
   );
 }

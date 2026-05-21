@@ -38,7 +38,7 @@ export function getProgressRatio(
   item: ManagementItem,
   elapsedDays: number | null
 ): number {
-  if (!elapsedDays || item.targetCycleDays <= 0) return 0;
+  if (elapsedDays === null || item.targetCycleDays <= 0) return 0;
   return Math.min(1, elapsedDays / item.targetCycleDays);
 }
 
@@ -86,27 +86,41 @@ export function urgencySortOrder(u: UrgencyLevel): number {
 export function getStatusColorClass(urgency: UrgencyLevel): string {
   switch (urgency) {
     case "overdue":
-      return "border-red-200 bg-red-50 text-red-700";
+      return "border-status-overdue-border bg-status-overdue-bg text-status-overdue-text";
     case "soon":
-      return "border-amber-200 bg-amber-50 text-amber-800";
+      return "border-status-soon-border bg-status-soon-bg text-status-soon-text";
     case "ok":
     case "done_today":
-      return "border-emerald-200 bg-emerald-50 text-emerald-800";
+      return "border-status-ok-border bg-status-ok-bg text-status-ok-text";
     default:
-      return "border-slate-200 bg-slate-50 text-slate-600";
+      return "border-status-neutral-border bg-status-neutral-bg text-status-neutral-text";
   }
 }
 
 export function getProgressBarClass(urgency: UrgencyLevel): string {
   switch (urgency) {
     case "overdue":
-      return "bg-red-500";
+      return "bg-status-overdue-bar";
     case "soon":
-      return "bg-amber-500";
+      return "bg-status-soon-bar";
     case "ok":
     case "done_today":
-      return "bg-emerald-500";
+      return "bg-status-ok-bar";
     default:
-      return "bg-slate-300";
+      return "bg-status-neutral-bar";
+  }
+}
+
+export function getProgressTrackClass(urgency: UrgencyLevel): string {
+  switch (urgency) {
+    case "overdue":
+      return "bg-status-overdue-track";
+    case "soon":
+      return "bg-status-soon-track";
+    case "ok":
+    case "done_today":
+      return "bg-status-ok-track";
+    default:
+      return "bg-line";
   }
 }
