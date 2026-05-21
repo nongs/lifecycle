@@ -4,6 +4,8 @@
 
 할 일 목록이 아니라 **“마지막 수행일 + 목표 주기”** 로 이발, 주유, 필터 교체 같은 일상을 관리합니다. 자동차 소모품 관리 UX를 일상 전반으로 옮긴 컨셉의 포트폴리오 프로젝트입니다.
 
+**예시 페이지 (라이브 데모):** [https://limgeonhong.com/lifecycle/](https://limgeonhong.com/lifecycle/)
+
 ---
 
 ## 목차
@@ -14,6 +16,7 @@
 - [사용법](#사용법)
 - [프로젝트 구조](#프로젝트-구조)
 - [데이터 저장](#데이터-저장)
+- [배포 (정적 빌드)](#배포-정적-빌드)
 - [로드맵](#로드맵)
 - [관련 문서](#관련-문서)
 - [라이선스](#라이선스)
@@ -38,9 +41,14 @@
 - 항목 상세 — 로그 목록·수정·삭제
 - 필터된 카테고리에 항목이 없을 때 **전용 empty UI** + 전체 보기
 
-### MVP 범위 외 (예정)
+### 통계 (`/stats`)
 
-- 통계 (평균 주기, 비용 집계)
+- **요약:** 전체 기록 수, 비용 입력 기록 수, 이번 달 비용 합계
+- **월별 비용:** `performedAt` 기준 월 합계(최근 12개월), 막대 비율 표시
+- **항목별:** 목표 주기, **실제 평균 주기**(로그 2건 이상일 때 인접 수행 간격 평균), 누적 비용
+
+### 이후 예정
+
 - 로그인·마이페이지·멀티 디바이스 동기화
 - 푸시 알림·PWA
 
@@ -54,13 +62,13 @@
 | Language | TypeScript 5 |
 | UI | React 19, [Tailwind CSS](https://tailwindcss.com/) 3 |
 | 상태·데이터 | React Context, **브라우저 localStorage** (Mock API 계층) |
-| 배포 (권장) | [Vercel](https://vercel.com/) |
+| 배포 | 정적 export → 개인 도메인 서브경로 |
 
 ### 개발 스펙 요약
 
 - **Node.js** 18.18 이상 권장 (Next.js 15 요구사항 준수)
 - **패키지 매니저:** npm
-- **라우트:** `/` (대시보드), `/items` (항목 관리)
+- **라우트:** `/` (대시보드), `/items` (항목 관리), `/stats` (통계)
 - **인증:** 없음 (MVP는 `userId = 1` 고정, 고도화 시 Auth 연동 예정)
 - **날짜 계산:** 일(day) 단위, **당일 0시(자정)** 기준
 - **주기 저장:** 내부 `targetCycleDays`(일), UI는 년/개월/주/일 입력
@@ -88,22 +96,23 @@ npm install
 npm run dev
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000) 을 엽니다.
+브라우저에서 [http://localhost:3000](http://localhost:3000) 을 엽니다.  
+로컬 개발에는 배포용 `basePath`가 적용되지 않습니다.
 
-### 프로덕션 빌드
+### 정적 빌드 (배포용)
 
 ```bash
 npm run build
-npm start
 ```
+
+빌드 결과는 **`out/`** 폴더에 생성됩니다. 아래 [배포](#배포-정적-빌드) 절을 참고하세요.
 
 ### 기타 스크립트
 
 | 명령 | 설명 |
 | :--- | :--- |
 | `npm run dev` | 개발 서버 (핫 리로드) |
-| `npm run build` | 프로덕션 빌드 |
-| `npm run start` | 빌드 결과 실행 |
+| `npm run build` | 정적 export 빌드 → `out/` |
 | `npm run lint` | ESLint 검사 |
 
 ---
@@ -133,6 +142,12 @@ npm start
 - **⋮ 메뉴**: 수정, 기록 추가, 아카이브.
 - **아카이브** 섹션: 복구 또는 영구 삭제.
 
+### 통계
+
+- 하단 **통계** 탭에서 월별·항목별 비용과 실제 평균 주기를 확인합니다.
+- **실제 평균 주기**는 같은 항목에 수행 기록이 **2건 이상**일 때만 계산됩니다.
+- 비용은 완료(로그) 입력 시 **비용 입력**을 켠 기록만 집계됩니다.
+
 ### 상태 표시 (신호등)
 
 | 상태 | 의미 |
@@ -159,13 +174,14 @@ lifecycle/
 ├── src/
 │   ├── app/                  # Next.js App Router 페이지
 │   │   ├── page.tsx          # 대시보드
-│   │   └── items/page.tsx    # 항목 관리
+│   │   ├── items/page.tsx    # 항목 관리
+│   │   └── stats/page.tsx    # 통계
 │   ├── components/           # UI 컴포넌트·모달
 │   ├── contexts/             # DataProvider (전역 데이터)
 │   ├── hooks/
 │   └── lib/
 │       ├── api/              # localStorage Mock API
-│       ├── utils/            # 날짜·주기·대시보드 정렬 등
+│       ├── utils/            # 날짜·주기·대시보드·통계 등
 │       ├── types.ts
 │       └── seed.ts           # 카테고리 시드
 ├── package.json
@@ -190,12 +206,53 @@ MVP는 **서버·DB 없이** 브라우저 `localStorage`에 저장합니다.
 
 ---
 
+## 배포 (정적 빌드)
+
+정적 HTML을 웹 서버에 올리는 방식입니다. 로컬 개발 URL과 별도로, **배포 빌드**(`npm run build`)에만 아래에서 정한 서브경로가 붙습니다.
+
+### 배포 경로(`basePath`) 변경 방법
+
+`next.config.ts` 상단의 **`DEPLOY_BASE_PATH`** 값을 수정한 뒤 다시 빌드합니다.
+
+```ts
+/** 배포 시 URL 서브경로 (로컬 npm run dev에는 미적용) */
+const DEPLOY_BASE_PATH = "/lifecycle";
+```
+
+| 설정값 | 배포 URL 예시 | 서버 업로드 위치 |
+| :--- | :--- | :--- |
+| `"/lifecycle"` | `https://도메인/lifecycle/` | 웹 루트 아래 `lifecycle/` 폴더 |
+| `""` (빈 문자열) | `https://도메인/` (루트) | 웹 루트 |
+
+- `DEPLOY_BASE_PATH`를 바꾼 후에는 **반드시** `npm run build`를 다시 실행해야 합니다.
+- `out/` 안의 JS·CSS·내부 링크가 모두 이 경로 기준으로 생성됩니다.
+- 로컬 `npm run dev`는 항상 [http://localhost:3000](http://localhost:3000) (경로 없음).
+
+### 빌드 및 업로드
+
+1. 경로를 확인·수정합니다 (`next.config.ts` → `DEPLOY_BASE_PATH`).
+
+2. 빌드합니다.
+
+   ```bash
+   npm run build
+   ```
+
+3. **`out/`** 폴더 **안의 모든 파일·폴더**를 서버의 **같은 경로**에 업로드합니다.  
+   예: `DEPLOY_BASE_PATH`가 `"/lifecycle"`이면 → 서버 `.../lifecycle/index.html`, `.../lifecycle/_next/`, …
+
+4. 웹 서버에서 해당 경로가 그 디렉터리를 가리키도록 설정합니다 (Apache/Nginx alias 등).
+
+> **참고:** 데이터는 브라우저 **localStorage**에만 저장됩니다. 기기·브라이저마다 다르며, 서버에는 올라가지 않습니다.
+
+---
+
 ## 로드맵
 
 | 단계 | 내용 | 상태 |
 | :---: | :--- | :---: |
 | 1 | MVP — 대시보드·항목·카테고리·로그·localStorage | ✅ |
-| 2 | 통계 — 평균 주기, 비용 집계 (`/stats`) | 예정 |
+| 2 | 통계 — 평균 주기, 비용 집계 (`/stats`) | ✅ |
 | 3 | 고도화 — Auth, 클라우드 DB, 알림, PWA, 마이페이지 | 예정 |
 
 ---
@@ -210,6 +267,7 @@ MVP는 **서버·DB 없이** 브라우저 `localStorage`에 저장합니다.
 | [LifeCycle_Development_Plan.md](./markdown/LifeCycle_Development_Plan.md) | 기술 스택·타입·Mock API·유틸 |
 | [LifeCycle_Screen_Plan.md](./markdown/LifeCycle_Screen_Plan.md) | 화면·플로우·IA |
 | [LifeCycle_MVP_Checklist.md](./markdown/LifeCycle_MVP_Checklist.md) | MVP 구현 체크리스트 |
+| [LifeCycle_Stats_Plan.md](./markdown/LifeCycle_Stats_Plan.md) | 통계 화면·집계 규칙 |
 
 ### 참고·영감
 

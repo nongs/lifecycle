@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 
 const links = [
   { href: "/", label: "대시보드" },
-  { href: "/items", label: "항목 관리" },
+  { href: "/items", label: "관리" },
+  { href: "/stats", label: "통계" },
 ];
 
 export function BottomNav() {
@@ -18,12 +19,15 @@ export function BottomNav() {
     >
       <div className="mx-auto flex max-w-lg">
         {links.map(({ href, label }) => {
-          const active = pathname === href;
+          const active =
+            href === "/"
+              ? pathname === "/"
+              : pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={href}
               href={href}
-              className={`flex flex-1 flex-col items-center py-3 text-sm font-medium ${
+              className={`flex flex-1 flex-col items-center py-2.5 text-xs font-medium sm:text-sm ${
                 active ? "text-slate-900" : "text-slate-500"
               }`}
               aria-current={active ? "page" : undefined}

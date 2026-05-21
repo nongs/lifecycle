@@ -19,7 +19,7 @@
 
 ## B. 공통 UI
 
-- [x] 앱 레이아웃 + 하단 네비 (대시보드 / 항목 관리)
+- [x] 앱 레이아웃 + 하단 네비 (대시보드 / 항목 관리 / 통계)
 - [x] 모달 / 풀모달 래퍼 (ESC 닫기)
 - [x] 확인 모달 L-06
 - [x] 신호등 + 진행바 + 상태 텍스트 (색상만 의존 X)
@@ -58,12 +58,20 @@
 - [x] `userId: 1` 모든 레코드
 - [x] `notificationEnabled` 저장 (발송 없음)
 - [x] 빌드·린트 통과
-- [x] README — MVP 완료 후
+- [x] README — MVP 완료 후 (정적 배포 `/lifecycle` 안내 포함)
 
 ---
 
-## F. MVP 제외 (참고)
+## F. MVP 제외 → 일부 반영
 
-- [ ] `/stats` 통계
+- [x] `/stats` 통계 (2단계 기본 구현)
 - [ ] `/my` 마이페이지·Auth
 - [ ] 푸시 알림·PWA
+
+---
+
+## G. 통계 2단계 (`/stats`)
+
+- [x] 통계 페이지·집계 유틸 (`src/lib/utils/stats.ts`)
+- [x] 요약·월별 비용·항목별 실제 평균 주기·누적 비용
+- [x] `markdown/LifeCycle_Stats_Plan.md`

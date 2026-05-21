@@ -4,7 +4,7 @@
 * Frontend: Next.js 14+ (App Router), TypeScript
 * Styling: Tailwind CSS
 * State Management: React Context API 또는 Zustand
-* Deployment/Hosting: Vercel (PWA 지원 환경 고려)
+* Deployment/Hosting: 정적 export, `next.config.ts`의 `DEPLOY_BASE_PATH`로 배포 서브경로 설정
 * i18n (추후): next-intl 등 — MVP부터 문구·단위 분리 구조 권장
 * a11y: 시맨틱 HTML, ARIA, 신호등 상태의 비색상 보조 표시(아이콘·텍스트)
 
