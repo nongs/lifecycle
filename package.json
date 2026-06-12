@@ -3,11 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "NEXT_PUBLIC_APP_VARIANT=demo next dev",
+    "dev:cloud": "NEXT_PUBLIC_APP_VARIANT=cloud next dev",
+    "dev:webapp:cloud": "NEXT_PUBLIC_APP_VARIANT=cloud NEXT_PUBLIC_SHELL_VARIANT=webapp next dev",
+    "build": "npm run build:demo",
+    "build:demo": "NEXT_PUBLIC_APP_VARIANT=demo DEPLOY_BASE_PATH=/lifecycle next build",
+    "build:cloud": "NEXT_PUBLIC_APP_VARIANT=cloud DEPLOY_BASE_PATH=/lifecycle-app next build",
+    "build:webapp:cloud": "NEXT_PUBLIC_APP_VARIANT=cloud NEXT_PUBLIC_SHELL_VARIANT=webapp DEPLOY_BASE_PATH=/lifecycle-pwa next build",
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.108.1",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

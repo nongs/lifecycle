@@ -6,7 +6,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LogFormModal } from "@/components/logs/LogFormModal";
 import { ItemFormModal } from "@/components/items/ItemFormModal";
 import { Button } from "@/components/ui/Button";
-import * as api from "@/lib/api/apiService";
+import * as api from "@/lib/api";
 import type { ActivityLog, Category, ManagementItem } from "@/lib/types";
 import { formatCycleDays } from "@/lib/utils/cycle";
 import { ItemStatusDisplay } from "@/components/items/ItemStatusDisplay";

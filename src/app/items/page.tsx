@@ -8,7 +8,7 @@ import { CategoryEditModal } from "@/components/categories/CategoryEditModal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useData } from "@/contexts/DataContext";
 import { useItemViewModels } from "@/hooks/useItemViewModels";
-import * as api from "@/lib/api/apiService";
+import * as api from "@/lib/api";
 import { formatCycleDays } from "@/lib/utils/cycle";
 import { URGENCY_LABELS } from "@/lib/utils/itemStatus";
 import { AddItemButton } from "@/components/items/AddItemButton";

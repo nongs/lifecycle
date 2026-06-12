@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CategoryFormModal } from "@/components/categories/CategoryFormModal";
-import * as api from "@/lib/api/apiService";
+import * as api from "@/lib/api";
 import type { Category } from "@/lib/types";
 
 type Props = {

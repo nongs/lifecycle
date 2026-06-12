@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="LifeCycle">
+  <rect width="512" height="512" rx="96" fill="#c4704a"/>
+  <circle cx="256" cy="256" r="120" fill="none" stroke="#faf8f5" stroke-width="28"/>
+  <path d="M256 136 v48 M256 328 v48 M136 256 h48 M328 256 h48" stroke="#faf8f5" stroke-width="24" stroke-linecap="round"/>
+</svg>

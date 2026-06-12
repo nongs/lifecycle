@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useData } from "@/contexts/DataContext";
+import { MonthlySpendAllModal } from "@/components/stats/MonthlySpendAllModal";
+import { MonthlySpendDetailModal } from "@/components/stats/MonthlySpendDetailModal";
+import { MonthlySpendRow } from "@/components/stats/MonthlySpendRow";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -11,16 +14,46 @@ import { formatCycleDays } from "@/lib/utils/cycle";
 import {
   averageActualCycleDays,
   currentYearMonth,
+  formatYearMonthLabel,
+  monthSpendTotalMap,
+  monthlySpendDetails,
   monthlySpendTotals,
   spendByItemId,
   totalSpendInMonth,
 } from "@/lib/utils/stats";
 
-export default function StatsPage() {
-  const { ready, items, logs, categories } = useData();
+const MONTHLY_PREVIEW_LIMIT = 3;
 
-  const categoryName = (id: string) =>
-    categories.find((c) => c.id === id)?.name ?? "미분류";
+export default function StatsPage() {
+  const { ready, items, archivedItems, logs, categories } = useData();
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [allMonthsOpen, setAllMonthsOpen] = useState(false);
+
+  const itemById = useMemo(() => {
+    const map = new Map<string, (typeof items)[0]>();
+    for (const item of [...items, ...archivedItems]) {
+      map.set(item.id, item);
+    }
+    return map;
+  }, [items, archivedItems]);
+
+  const categoryName = useCallback(
+    (id: string) => categories.find((c) => c.id === id)?.name ?? "미분류",
+    [categories]
+  );
+
+  const itemName = useCallback(
+    (itemId: string) => itemById.get(itemId)?.name ?? "삭제된 항목",
+    [itemById]
+  );
+
+  const categoryNameByItemId = useCallback(
+    (itemId: string) => {
+      const item = itemById.get(itemId);
+      return item ? categoryName(item.categoryId) : "미분류";
+    },
+    [itemById, categoryName]
+  );
 
   const stats = useMemo(() => {
     const ym = currentYearMonth();
@@ -52,10 +85,27 @@ export default function StatsPage() {
     };
   }, [items, logs]);
 
-  const maxMonthSpend = useMemo(() => {
-    if (stats.monthRows.length === 0) return 1;
-    return Math.max(...stats.monthRows.map((r) => r.total), 1);
-  }, [stats.monthRows]);
+  const monthTotalMap = useMemo(
+    () => monthSpendTotalMap(stats.monthRows),
+    [stats.monthRows]
+  );
+
+  const previewRows = stats.monthRows.slice(0, MONTHLY_PREVIEW_LIMIT);
+  const showViewAll = stats.monthRows.length > MONTHLY_PREVIEW_LIMIT;
+
+  const selectedMonthDetails = useMemo(() => {
+    if (!selectedMonth) return [];
+    return monthlySpendDetails(
+      selectedMonth,
+      logs,
+      itemName,
+      categoryNameByItemId
+    );
+  }, [selectedMonth, logs, itemName, categoryNameByItemId]);
+
+  const selectedMonthTotal = selectedMonth
+    ? totalSpendInMonth(logs, selectedMonth)
+    : 0;
 
   if (!ready) {
     return <PageLoading />;
@@ -74,7 +124,7 @@ export default function StatsPage() {
           <li>전체 수행 기록: {stats.totalLogs}건</li>
           <li>비용이 입력된 기록: {stats.logsWithCostCount}건</li>
           <li>
-            이번 달({stats.ym}) 비용 합계:{" "}
+            이번 달({formatYearMonthLabel(stats.ym)}) 비용 합계:{" "}
             <span className="font-semibold text-ink">
               {stats.thisMonthSpend.toLocaleString()}원
             </span>
@@ -83,12 +133,20 @@ export default function StatsPage() {
       </Card>
 
       <section className="mb-6" aria-labelledby="monthly-spend-heading">
-        <h2
-          id="monthly-spend-heading"
-          className="mb-3 text-sm font-semibold text-ink"
-        >
-          월별 비용
-        </h2>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 id="monthly-spend-heading" className="text-sm font-semibold text-ink">
+            월별 비용
+          </h2>
+          {showViewAll ? (
+            <Button
+              variant="ghost"
+              className="shrink-0 px-2 py-1.5 text-xs"
+              onClick={() => setAllMonthsOpen(true)}
+            >
+              전체 보기
+            </Button>
+          ) : null}
+        </div>
         {stats.monthRows.length === 0 ? (
           <EmptyState
             illustration="cost"
@@ -97,25 +155,13 @@ export default function StatsPage() {
           />
         ) : (
           <ul className="space-y-3">
-            {stats.monthRows.slice(0, 12).map((row) => (
-              <li key={row.yearMonth} className="card p-3">
-                <div className="mb-1.5 flex justify-between text-sm">
-                  <span className="font-medium text-ink">{row.yearMonth}</span>
-                  <span className="text-ink-muted">
-                    {row.total.toLocaleString()}원
-                  </span>
-                </div>
-                <div
-                  className="h-2 overflow-hidden rounded-full bg-line"
-                  role="presentation"
-                >
-                  <div
-                    className="h-full rounded-full bg-primary transition-all duration-300"
-                    style={{
-                      width: `${Math.min(100, (row.total / maxMonthSpend) * 100)}%`,
-                    }}
-                  />
-                </div>
+            {previewRows.map((row) => (
+              <li key={row.yearMonth} className="card overflow-hidden">
+                <MonthlySpendRow
+                  row={row}
+                  monthTotalMap={monthTotalMap}
+                  onClick={() => setSelectedMonth(row.yearMonth)}
+                />
               </li>
             ))}
           </ul>
@@ -181,6 +227,23 @@ export default function StatsPage() {
           </ul>
         )}
       </section>
+
+      <MonthlySpendDetailModal
+        open={!!selectedMonth}
+        yearMonth={selectedMonth}
+        total={selectedMonthTotal}
+        details={selectedMonthDetails}
+        onClose={() => setSelectedMonth(null)}
+      />
+
+      <MonthlySpendAllModal
+        open={allMonthsOpen}
+        onClose={() => setAllMonthsOpen(false)}
+        monthRows={stats.monthRows}
+        logs={logs}
+        itemName={itemName}
+        categoryNameByItemId={categoryNameByItemId}
+      />
     </div>
   );
 }

@@ -4,7 +4,10 @@
 
 할 일 목록이 아니라 **“마지막 수행일 + 목표 주기”** 로 이발, 주유, 필터 교체 같은 일상을 관리합니다. 자동차 소모품 관리 UX를 일상 전반으로 옮긴 컨셉의 포트폴리오 프로젝트입니다.
 
-**예시 페이지 (라이브 데모):** [https://limgeonhong.com/lifecycle/](https://limgeonhong.com/lifecycle/)
+| 빌드 | 설명 | 예시 URL |
+| :--- | :--- | :--- |
+| **demo** | localStorage, 포트폴리오 데모 | [https://limgeonhong.com/lifecycle/](https://limgeonhong.com/lifecycle/) |
+| **cloud** | Supabase·Auth 연동용 (B단계) | [https://limgeonhong.com/lifecycle-app/](https://limgeonhong.com/lifecycle-app/) *(업로드 후)* |
 
 ---
 
@@ -93,7 +96,8 @@ npm install
 ### 개발 서버
 
 ```bash
-npm run dev
+npm run dev          # demo — localStorage (일상 개발)
+npm run dev:cloud    # cloud — Supabase 연동 준비 안내 화면
 ```
 
 브라우저에서 [http://localhost:3000](http://localhost:3000) 을 엽니다.  
@@ -102,17 +106,29 @@ npm run dev
 ### 정적 빌드 (배포용)
 
 ```bash
-npm run build
+npm run build:demo    # → /lifecycle (데모)
+npm run build:cloud   # → /lifecycle-app (클라우드 슬롯)
 ```
 
-빌드 결과는 **`out/`** 폴더에 생성됩니다. 아래 [배포](#배포-정적-빌드) 절을 참고하세요.
+`npm run build`는 `build:demo`와 동일합니다. 결과는 **`out/`** 에 생성됩니다.
+
+### 빌드 variant (2축)
+
+| 축 | 값 | 역할 |
+| :--- | :--- | :--- |
+| **데이터** | `demo` / `cloud` | localStorage vs Supabase (`NEXT_PUBLIC_DATA_VARIANT` 또는 `APP_VARIANT`) |
+| **셸** | `web` / `webapp` | 브라우저 vs PWA (`NEXT_PUBLIC_SHELL_VARIANT`, C단계) |
+
+현재 스크립트는 **web + demo/cloud** 2종. webapp·4종 빌드는 [로드맵 C절](./markdown/LifeCycle_Design_And_Fullstack_Roadmap.md) 참고.
 
 ### 기타 스크립트
 
 | 명령 | 설명 |
 | :--- | :--- |
-| `npm run dev` | 개발 서버 (핫 리로드) |
-| `npm run build` | 정적 export 빌드 → `out/` |
+| `npm run dev` | demo 개발 서버 |
+| `npm run dev:cloud` | cloud 개발 서버 (안내 UI) |
+| `npm run build:demo` | demo 정적 export → `out/` |
+| `npm run build:cloud` | cloud 정적 export → `out/` |
 | `npm run lint` | ESLint 검사 |
 
 ---
@@ -180,7 +196,10 @@ lifecycle/
 │   ├── contexts/             # DataProvider (전역 데이터)
 │   ├── hooks/
 │   └── lib/
-│       ├── api/              # localStorage Mock API
+│       ├── api/              # IDataService · demo/cloud 분기
+│       │   ├── index.ts
+│       │   ├── localStorageService.ts
+│       │   └── cloudPlaceholderService.ts
 │       ├── utils/            # 날짜·주기·대시보드·통계 등
 │       ├── types.ts
 │       └── seed.ts           # 카테고리 시드
@@ -200,8 +219,9 @@ MVP는 **서버·DB 없이** 브라우저 `localStorage`에 저장합니다.
 | `lifecycle:items` | 관리 항목 |
 | `lifecycle:logs` | 수행 기록 |
 
-- 컴포넌트는 `src/lib/api/apiService.ts` 인터페이스만 사용합니다.  
-- 고도화 시 Supabase/PostgreSQL 등으로 **API 구현만 교체**하는 구조입니다.
+- **demo** 빌드: 브라우저 `localStorage` (`localStorageService`).
+- **cloud** 빌드: B-1에서 Supabase 구현체로 교체 (`@/lib/api` 진입점 동일).
+- 컴포넌트는 `@/lib/api`만 import 합니다.
 - 브라우저 데이터를 지우면 저장 내용도 초기화됩니다. 시드 카테고리는 다시 생성됩니다.
 
 ---
@@ -212,36 +232,32 @@ MVP는 **서버·DB 없이** 브라우저 `localStorage`에 저장합니다.
 
 ### 배포 경로(`basePath`) 변경 방법
 
-`next.config.ts` 상단의 **`DEPLOY_BASE_PATH`** 값을 수정한 뒤 다시 빌드합니다.
+빌드 스크립트의 **`DEPLOY_BASE_PATH`** 또는 `next.config.ts` 기본값을 수정합니다.
 
-```ts
-/** 배포 시 URL 서브경로 (로컬 npm run dev에는 미적용) */
-const DEPLOY_BASE_PATH = "/lifecycle";
+| 빌드 명령 | variant | 기본 경로 |
+| :--- | :--- | :--- |
+| `npm run build:demo` | demo | `/lifecycle` |
+| `npm run build:cloud` | cloud | `/lifecycle-app` |
+
+커스텀 예:
+
+```bash
+DEPLOY_BASE_PATH=/my-path npm run build:demo
 ```
 
 | 설정값 | 배포 URL 예시 | 서버 업로드 위치 |
 | :--- | :--- | :--- |
-| `"/lifecycle"` | `https://도메인/lifecycle/` | 웹 루트 아래 `lifecycle/` 폴더 |
-| `""` (빈 문자열) | `https://도메인/` (루트) | 웹 루트 |
-
-- `DEPLOY_BASE_PATH`를 바꾼 후에는 **반드시** `npm run build`를 다시 실행해야 합니다.
-- `out/` 안의 JS·CSS·내부 링크가 모두 이 경로 기준으로 생성됩니다.
-- 로컬 `npm run dev`는 항상 [http://localhost:3000](http://localhost:3000) (경로 없음).
+| `"/lifecycle"` | `https://도메인/lifecycle/` | `lifecycle/` |
+| `"/lifecycle-app"` | `https://도메인/lifecycle-app/` | `lifecycle-app/` |
+| `""` | `https://도메인/` | 웹 루트 |
 
 ### 빌드 및 업로드
 
-1. 경로를 확인·수정합니다 (`next.config.ts` → `DEPLOY_BASE_PATH`).
+1. 용도에 맞게 `build:demo` 또는 `build:cloud` 실행.
 
-2. 빌드합니다.
+2. **`out/`** 내용을 서버 **동일 경로**에 업로드.
 
-   ```bash
-   npm run build
-   ```
-
-3. **`out/`** 폴더 **안의 모든 파일·폴더**를 서버의 **같은 경로**에 업로드합니다.  
-   예: `DEPLOY_BASE_PATH`가 `"/lifecycle"`이면 → 서버 `.../lifecycle/index.html`, `.../lifecycle/_next/`, …
-
-4. 웹 서버에서 해당 경로가 그 디렉터리를 가리키도록 설정합니다 (Apache/Nginx alias 등).
+3. 웹 서버 alias 설정 (Apache/Nginx 등).
 
 > **참고:** 데이터는 브라우저 **localStorage**에만 저장됩니다. 기기·브라이저마다 다르며, 서버에는 올라가지 않습니다.
 
@@ -254,7 +270,8 @@ const DEPLOY_BASE_PATH = "/lifecycle";
 | 1 | MVP — 대시보드·항목·카테고리·로그·localStorage | ✅ |
 | 2 | 통계 — 평균 주기, 비용 집계 (`/stats`) | ✅ |
 | A-1 | 디자인 마무리 (토큰·UI·Empty·모바일 QA) | ✅ |
-| A-2 | **demo/cloud 이중 빌드** 분기 | 예정 |
+| A-2 | **demo/cloud** 데이터 분기 | ✅ |
+| C | **web / webapp** 셸 분기 (PWA) | 예정 (B-1·B-2 후) |
 | 3 | 고도화 — Auth, 클라우드 DB, 알림, PWA, 마이페이지 (`cloud`만) | 예정 |
 
 상세 단계·체크리스트: [LifeCycle_Design_And_Fullstack_Roadmap.md](./markdown/LifeCycle_Design_And_Fullstack_Roadmap.md)

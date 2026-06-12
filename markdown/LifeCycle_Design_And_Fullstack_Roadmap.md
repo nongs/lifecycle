@@ -49,7 +49,7 @@ flowchart TB
 | :---: | :--- | :--- | :--- |
 | — | MVP + 통계 | ✅ | `/lifecycle` (현재) |
 | **A-1** | 디자인 마무리 | ✅ 편안한 UI·공통 Empty·모바일 QA | `/lifecycle` |
-| **A-2** | **분기 인프라** (`demo`/`cloud` 빌드) | 예정 | 데모 + `/lifecycle-app` 슬롯 |
+| **A-2** | **분기 인프라** (`demo`/`cloud` 빌드) | ✅ | 데모 + `/lifecycle-app` 슬롯 |
 | **B** | 풀스택 확장 | Auth, DB, `/my` … | **cloud 빌드만** 기능 추가 (demo는 동결·버그픽스만) |
 
 ---
@@ -139,9 +139,11 @@ src/lib/api/
 
 **완료 기준 (분기 인프라)**
 
-- [ ] `build:demo` / `build:cloud` 로 각각 `out/` 생성·서버 업로드 검증
-- [ ] cloud 빌드는 Supabase 미설정 시 **명확한 안내 화면** (빈 화면 X)
-- [ ] demo 빌드는 기존과 동일 동작 (회귀 없음)
+- [x] `build:demo` / `build:cloud` 스크립트·`next.config` 경로 분기
+- [x] `@/lib/api` + `localStorageService` / `cloudPlaceholderService`
+- [x] cloud 빌드 → **CloudSetupNotice** 안내 화면 (B-1 전)
+- [x] demo 빌드 → localStorage 동작 유지
+- [ ] 서버에 `/lifecycle-app` 업로드 검증 (운영)
 
 ---
 
@@ -156,19 +158,23 @@ src/lib/api/
 | `LifeCycle_User_Auth_Plan.md` | User 모델, 로그인 방식(Supabase Auth 권장), `/my` IA, RLS 원칙 |
 | `LifeCycle_Supabase_Schema.md` | categories / items / logs 테이블, `user_id` FK, 마이그레이션 |
 
-### B-1. DB + API 계층 (3~5일)
+### B-1. DB + API 계층 — ✅ 완료
 
-- [ ] Supabase 프로젝트, 테이블·RLS (`auth.uid()` = row owner)
-- [ ] `supabaseService.ts` — `IDataService`와 동일 시그니처
-- [ ] 시드: demo는 기존 `seed.ts`, cloud는 **로그인 사용자별** 또는 온보딩 플로우
-- [ ] (선택) demo → cloud **JSON 마이그레이션** 도구 (`/my` 또는 1회성 import)
+- [x] Supabase 프로젝트, 테이블·RLS (`auth.uid()` = row owner)
+- [x] `supabaseService.ts` — `IDataService`와 동일 시그니처
+- [x] cloud ↔ local 동기화 (`cloudLocalSync.ts`, 로그아웃 스냅샷)
+- [x] 데이터 보내기·가져오기 (`datasetIO.ts`, `/settings`)
 
-### B-2. Auth + `/my` (3~5일)
+### B-2. Auth + `/settings` — ✅ 완료 (SMTP·OAuth는 운영 체크리스트)
 
-- [ ] Supabase Auth (이메일 magic link 또는 OAuth 1종)
-- [ ] `/my` — 프로필, 로그아웃, (선택) 데이터보내기
-- [ ] 미로그인 시 cloud 빌드: 로그인 유도, 핵심 라우트 가드
-- [ ] `userId: 1` 제거 → JWT `sub` 기준
+- [x] Supabase Auth — 이메일 Magic Link
+- [x] `/settings` — 로그인 패널, 계정·로그아웃, 푸시 스위치, 데이터 I/O
+- [x] `/settings/login` — Magic Link 발송
+- [x] 로그인 직후 로컬→cloud 마이그레이션 모달
+- [x] 미로그인 → localStorage / 로그인 → Supabase
+- [ ] **Custom SMTP** — 나중 ([`LifeCycle_Ops_Checklist.md`](./LifeCycle_Ops_Checklist.md))
+- [ ] OAuth — 추후
+- [ ] `userId: 1` → JWT `sub` (타입 정리, 선택)
 
 ### B-3. 동기화·알림 (5~7일, 선택)
 
@@ -181,6 +187,74 @@ src/lib/api/
 - [ ] README: 두 variant 차이 표
 - [ ] 포트폴리오: “Mock API → 인터페이스 → Supabase RLS” 서술
 - [ ] (선택) GitHub Actions: `main` push 시 `build:demo` + `build:cloud` 아티팩트
+
+---
+
+## C. 2축 분기 — **셸(web / webapp)** × **데이터(local / db)**
+
+> A-2는 **데이터 축**만 구현됨 (`demo` | `cloud`).  
+> 웹앱(PWA)은 **셸 축**을 추가해 같은 UI·API 위에 manifest·SW·푸시만 얹는 방식이 맞다.
+
+### 매트릭스
+
+|  | **local** (`demo`) | **db** (`cloud`) |
+| :--- | :--- | :--- |
+| **web** | 포트폴리오 데모 · `/lifecycle` | 풀스택 브라우저 · `/lifecycle-app` |
+| **webapp** (PWA) | (선택) 오프라인 데모 | **목표:** 설치형·알림·동기화 |
+
+- **UI·화면·통계:** 4칸 **공통** (이미 모바일 퍼스트)
+- **데이터:** `@/lib/api` — `localStorageService` | `supabaseService` (B-1)
+- **셸:** `web` = 지금과 동일 · `webapp` = manifest + SW + (cloud) 푸시
+
+### 환경 변수 (빌드 시점)
+
+| 변수 | `web` | `webapp` | `local` | `db` |
+| :--- | :--- | :--- | :--- | :--- |
+| `NEXT_PUBLIC_SHELL_VARIANT` | `web` (기본) | `webapp` | — | — |
+| `NEXT_PUBLIC_DATA_VARIANT` | — | — | `demo` | `cloud` |
+| `NEXT_PUBLIC_APP_VARIANT` | — | — | `demo` | `cloud` *(하위 호환)* |
+
+코드: `src/lib/variant.ts` — `DATA_VARIANT`, `SHELL_VARIANT`, `isWebAppFeaturesEnabled()`
+
+### 빌드 스크립트 (목표 4종, 단계적 도입)
+
+| 스크립트 | shell | data | 배포 예 |
+| :--- | :--- | :--- | :--- |
+| `build:demo` *(현재)* | web | local | `/lifecycle` |
+| `build:cloud` *(현재)* | web | db | `/lifecycle-app` |
+| `build:webapp:demo` | webapp | local | (선택) |
+| `build:webapp:cloud` | webapp | db | `/lifecycle-pwa` 등 |
+
+**권장 순서:** B-1 cloud DB → B-2 Auth → **C-1 webapp+cloud** (manifest·SW) → C-2 푸시.  
+demo는 **web만** 유지해도 포트폴리오에는 충분.
+
+### 코드 구조 (셸 축)
+
+```
+src/lib/
+  variant.ts           # DATA_VARIANT + SHELL_VARIANT
+  api/                 # 데이터 축만
+src/components/shell/  # (C단계) InstallPrompt, PWA meta
+public/
+  manifest.webmanifest # basePath 반영 (빌드 시 생성 또는 env)
+  sw.js                # 정적 export용 SW (next-pwa 또는 수동)
+```
+
+### 셸별 기능 ON/OFF 예
+
+```ts
+if (isWebAppFeaturesEnabled() && isCloudBackendReady()) {
+  // 푸시 구독, 백그라운드 sync 등
+}
+```
+
+### C-1. webapp + cloud (진행 중)
+
+- [x] `build:webapp:cloud` / `dev:webapp:cloud` + `DEPLOY_BASE_PATH=/lifecycle-pwa`
+- [x] `manifest.ts` + 아이콘 + `display: standalone` (webapp 빌드만)
+- [x] Service Worker 등록 (`public/sw.js`, `PwaRegister`)
+- [ ] 설치 유도 UI (`InstallPrompt`)
+- [ ] cloud + webapp: Web Push / Notification API (C-2)
 
 ---
 
@@ -203,18 +277,19 @@ src/lib/api/
 2. [x] 공통 UI + 화면·모달·Empty
 3. [x] 모바일 QA
 
-### 다음 → A-2 분기 인프라
+### A-2 분기 인프라 — ✅ 완료
 
-4. [ ] `IDataService` + `api/index.ts` + `build:demo` / `build:cloud` / `dev:cloud`
-5. [ ] 서버에 `/lifecycle-app` 디렉터리·cloud 빌드 슬롯
-6. [ ] README 두 예시 링크 반영
+4. [x] `IDataService` + `api/index.ts` + `build:demo` / `build:cloud` / `dev:cloud`
+5. [x] README·`.env.example` 두 variant 안내
+6. [ ] 서버 `/lifecycle-app` 업로드 (운영)
 
-### 그다음 → 풀스택 (cloud만)
+### 다음 → C-1 PWA (webapp + cloud)
 
-7. [ ] B-0 User·Auth + Schema 문서
-8. [ ] B-1 Supabase + `supabaseService`
-9. [ ] B-2 Auth + `/my`
-10. [ ] B-3 알림·PWA (선택)
+7. [x] B-1 Supabase + API
+8. [x] B-2 Auth + `/settings` + 데이터 I/O
+9. [ ] C-1 PWA manifest·SW (`dev:webapp:cloud`)
+10. [ ] C-2 푸시 알림 (선택)
+11. [ ] SMTP·OAuth — [`LifeCycle_Ops_Checklist.md`](./LifeCycle_Ops_Checklist.md)
 
 ---
 
@@ -255,6 +330,8 @@ const DEPLOY_BASE_PATH =
 
 | 문서 | 역할 |
 | :--- | :--- |
+| [LifeCycle_Ops_Checklist.md](./LifeCycle_Ops_Checklist.md) | SMTP·OAuth·배포 체크리스트 |
+| [LifeCycle_Cloud_Data_Sync.md](./LifeCycle_Cloud_Data_Sync.md) | 로컬↔클라우드·I/O |
 | [LifeCycle_Project_Plan.md](./LifeCycle_Project_Plan.md) | 서비스·3단계 로드맵 |
 | [LifeCycle_Development_Plan.md](./LifeCycle_Development_Plan.md) | 기술·API 계층 |
 | [README.md](../README.md) | 실행·배포·예시 URL |

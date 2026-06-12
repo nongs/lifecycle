@@ -7,6 +7,7 @@ const links = [
   { href: "/", label: "대시보드" },
   { href: "/items", label: "관리" },
   { href: "/stats", label: "통계" },
+  { href: "/settings", label: "설정" },
 ];
 
 export function BottomNav() {

@@ -130,4 +130,9 @@
   .menu-action-danger {
     @apply menu-action font-medium text-danger hover:bg-status-overdue-bg;
   }
+
+  /* 전체보기 월별 상세 — 2건째부터 구분선 (외곽 실선과 겹침 완화) */
+  .spend-detail-plain > li + li {
+    @apply mt-3 border-t border-dashed border-line-strong/40 pt-3;
+  }
 }
