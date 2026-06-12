@@ -36,11 +36,14 @@
 
 ## 배포
 
-| 빌드 | 경로 예 | 용도 |
-|------|---------|------|
-| `build:demo` | `/lifecycle` | 포트폴리오 데모 |
-| `build:cloud` | `/lifecycle-app` | 풀스택 브라우저 |
-| `build:webapp:cloud` | `/lifecycle-pwa` | PWA (C-1) |
+| 빌드 | env 파일 | 경로 예 |
+|------|----------|---------|
+| `build:demo` | `.env.build.demo` | `/lifecycle` |
+| `build:cloud` | `.env.build.cloud` + `.env.build.cloud.secrets.local` | `/lifecycle-app` |
+| `build:webapp:cloud` | `.env.build.webapp.cloud` + secrets.local | `/lifecycle-pwa` |
+
+secrets.local 없으면 cloud 빌드 시 Supabase 키가 비어 있습니다.  
+`cp .env.build.cloud.secrets.example .env.build.cloud.secrets.local` 후 값 입력.
 
 ---
 

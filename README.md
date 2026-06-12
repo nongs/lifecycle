@@ -112,6 +112,24 @@ npm run build:cloud   # → /lifecycle-app (클라우드 슬롯)
 
 `npm run build`는 `build:demo`와 동일합니다. 결과는 **`out/`** 에 생성됩니다.
 
+### 환경 변수 (dev / build)
+
+| 용도 | 파일 | 커밋 |
+| :--- | :--- | :---: |
+| 로컬 개발 | `.env.local` | ✗ |
+| demo 빌드 | `.env.build.demo` | ✓ |
+| cloud 빌드 | `.env.build.cloud` + `.env.build.cloud.secrets.local` | ✓ / ✗ |
+| PWA 빌드 | `.env.build.webapp.cloud` + secrets.local (공유) | ✓ / ✗ |
+
+cloud 빌드 secrets 최초 설정:
+
+```bash
+cp .env.build.cloud.secrets.example .env.build.cloud.secrets.local
+# .env.local 과 동일한 Supabase URL·anon key 입력
+```
+
+빌드 스크립트는 `dotenv-cli`로 위 파일을 읽습니다. variant·`DEPLOY_BASE_PATH`는 각 `.env.build.*`에, Supabase 키는 secrets.local에만 둡니다.
+
 ### 빌드 variant (2축)
 
 | 축 | 값 | 역할 |
@@ -119,7 +137,7 @@ npm run build:cloud   # → /lifecycle-app (클라우드 슬롯)
 | **데이터** | `demo` / `cloud` | localStorage vs Supabase (`NEXT_PUBLIC_DATA_VARIANT` 또는 `APP_VARIANT`) |
 | **셸** | `web` / `webapp` | 브라우저 vs PWA (`NEXT_PUBLIC_SHELL_VARIANT`, C단계) |
 
-현재 스크립트는 **web + demo/cloud** 2종. webapp·4종 빌드는 [로드맵 C절](./markdown/LifeCycle_Design_And_Fullstack_Roadmap.md) 참고.
+현재 스크립트: **demo / cloud / webapp:cloud** 3종. 상세는 [로드맵 C절](./markdown/LifeCycle_Design_And_Fullstack_Roadmap.md) 참고.
 
 ### 기타 스크립트
 
@@ -129,6 +147,7 @@ npm run build:cloud   # → /lifecycle-app (클라우드 슬롯)
 | `npm run dev:cloud` | cloud 개발 서버 (안내 UI) |
 | `npm run build:demo` | demo 정적 export → `out/` |
 | `npm run build:cloud` | cloud 정적 export → `out/` |
+| `npm run build:webapp:cloud` | PWA cloud export → `out/` |
 | `npm run lint` | ESLint 검사 |
 
 ---
