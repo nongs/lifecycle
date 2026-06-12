@@ -28,7 +28,7 @@ flowchart TB
 
   subgraph deploy [배포]
     P1["/lifecycle 데모"]
-    P2["/lifecycle-app 클라우드 예시"]
+    P2["/lifecycle 클라우드 예시"]
   end
 
   subgraph phaseB [B. 풀스택 확장 — cloud만 기능 증가]
@@ -49,7 +49,7 @@ flowchart TB
 | :---: | :--- | :--- | :--- |
 | — | MVP + 통계 | ✅ | `/lifecycle` (현재) |
 | **A-1** | 디자인 마무리 | ✅ 편안한 UI·공통 Empty·모바일 QA | `/lifecycle` |
-| **A-2** | **분기 인프라** (`demo`/`cloud` 빌드) | ✅ | 데모 + `/lifecycle-app` 슬롯 |
+| **A-2** | **분기 인프라** (`demo`/`cloud` 빌드) | ✅ | 데모 + `/lifecycle` 슬롯 |
 | **B** | 풀스택 확장 | Auth, DB, `/my` … | **cloud 빌드만** 기능 추가 (demo는 동결·버그픽스만) |
 
 ---
@@ -98,7 +98,7 @@ flowchart TB
 | 변수 | `demo` | `cloud` |
 | :--- | :--- | :--- |
 | `NEXT_PUBLIC_APP_VARIANT` | `demo` | `cloud` |
-| `DEPLOY_BASE_PATH` (기존) | `/lifecycle` | `/lifecycle-app` *(경로는 자유, 예시)* |
+| `DEPLOY_BASE_PATH` (기존) | `/lifecycle` | `/lifecycle` *(경로는 자유, 예시)* |
 | Supabase URL/Key | 없음 | `.env.production` / `.env.local` |
 
 로컬 개발:
@@ -113,7 +113,7 @@ flowchart TB
 | 명령 (추가 예정) | `out/` 업로드 위치 |
 | :--- | :--- |
 | `npm run build:demo` | 서버 `.../lifecycle/` |
-| `npm run build:cloud` | 서버 `.../lifecycle-app/` |
+| `npm run build:cloud` | 서버 `.../lifecycle/` |
 
 #### 코드 구조 (목표)
 
@@ -133,7 +133,7 @@ src/lib/api/
 | 버전 | 예시 URL (안) |
 | :--- | :--- |
 | 데모 (로컬 저장) | `https://limgeonhong.com/lifecycle/` |
-| 클라우드 (풀스택) | `https://limgeonhong.com/lifecycle-app/` |
+| 클라우드 (풀스택) | `https://limgeonhong.com/lifecycle/` |
 
 두 링크를 README 상단에 나란히 두고, 각각 `DEPLOY_BASE_PATH`·`build:demo` / `build:cloud` 안내.
 
@@ -143,7 +143,7 @@ src/lib/api/
 - [x] `@/lib/api` + `localStorageService` / `cloudPlaceholderService`
 - [x] cloud 빌드 → **CloudSetupNotice** 안내 화면 (B-1 전)
 - [x] demo 빌드 → localStorage 동작 유지
-- [ ] 서버에 `/lifecycle-app` 업로드 검증 (운영)
+- [ ] 서버에 `/lifecycle` 업로드 검증 (운영)
 
 ---
 
@@ -199,7 +199,7 @@ src/lib/api/
 
 |  | **local** (`demo`) | **db** (`cloud`) |
 | :--- | :--- | :--- |
-| **web** | 포트폴리오 데모 · `/lifecycle` | 풀스택 브라우저 · `/lifecycle-app` |
+| **web** | 포트폴리오 데모 · `/lifecycle` | 풀스택 브라우저 · `/lifecycle` |
 | **webapp** (PWA) | (선택) 오프라인 데모 | **목표:** 설치형·알림·동기화 |
 
 - **UI·화면·통계:** 4칸 **공통** (이미 모바일 퍼스트)
@@ -221,7 +221,7 @@ src/lib/api/
 | 스크립트 | shell | data | 배포 예 |
 | :--- | :--- | :--- | :--- |
 | `build:demo` *(현재)* | web | local | `/lifecycle` |
-| `build:cloud` *(현재)* | web | db | `/lifecycle-app` |
+| `build:cloud` *(현재)* | web | db | `/lifecycle` |
 | `build:webapp:demo` | webapp | local | (선택) |
 | `build:webapp:cloud` | webapp | db | `/lifecycle-pwa` 등 |
 
@@ -281,7 +281,7 @@ if (isWebAppFeaturesEnabled() && isCloudBackendReady()) {
 
 4. [x] `IDataService` + `api/index.ts` + `build:demo` / `build:cloud` / `dev:cloud`
 5. [x] README·`.env.example` 두 variant 안내
-6. [ ] 서버 `/lifecycle-app` 업로드 (운영)
+6. [ ] 서버 `/lifecycle` 업로드 (운영)
 
 ### 다음 → C-1 PWA (webapp + cloud)
 
@@ -299,7 +299,7 @@ if (isWebAppFeaturesEnabled() && isCloudBackendReady()) {
 const DEPLOY_BASE_PATH =
   process.env.DEPLOY_BASE_PATH ??
   (process.env.NEXT_PUBLIC_APP_VARIANT === "cloud"
-    ? "/lifecycle-app"
+    ? "/lifecycle"
     : "/lifecycle");
 ```
 
@@ -309,7 +309,7 @@ const DEPLOY_BASE_PATH =
 {
   "dev:cloud": "NEXT_PUBLIC_APP_VARIANT=cloud next dev",
   "build:demo": "NEXT_PUBLIC_APP_VARIANT=demo DEPLOY_BASE_PATH=/lifecycle next build",
-  "build:cloud": "NEXT_PUBLIC_APP_VARIANT=cloud DEPLOY_BASE_PATH=/lifecycle-app next build"
+  "build:cloud": "NEXT_PUBLIC_APP_VARIANT=cloud DEPLOY_BASE_PATH=/lifecycle next build"
 }
 ```
 

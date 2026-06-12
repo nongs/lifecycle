@@ -39,7 +39,7 @@
 | 빌드 | env 파일 | 경로 예 |
 |------|----------|---------|
 | `build:demo` | `.env.build.demo` | `/lifecycle` |
-| `build:cloud` | `.env.build.cloud` + `.env.build.cloud.secrets.local` | `/lifecycle-app` |
+| `build:cloud` | `.env.build.cloud` + `.env.build.cloud.secrets.local` | `/lifecycle` |
 | `build:webapp:cloud` | `.env.build.webapp.cloud` + secrets.local | `/lifecycle-pwa` |
 
 secrets.local 없으면 cloud 빌드 시 Supabase 키가 비어 있습니다.  

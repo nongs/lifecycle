@@ -8,12 +8,9 @@ const shellVariant =
 
 /**
  * 배포 서브경로. 빌드 스크립트에서 DEPLOY_BASE_PATH 로 덮어쓸 수 있음.
- * - demo: /lifecycle
- * - cloud: /lifecycle-app
+ * - demo / cloud: /lifecycle (빌드별 .env.build.* 로 덮어쓸 수 있음)
  */
-const DEPLOY_BASE_PATH =
-  process.env.DEPLOY_BASE_PATH ??
-  (variant === "cloud" ? "/lifecycle-app" : "/lifecycle");
+const DEPLOY_BASE_PATH = process.env.DEPLOY_BASE_PATH ?? "/lifecycle";
 
 const isProd = process.env.NODE_ENV === "production";
 const basePath = isProd ? DEPLOY_BASE_PATH : "";

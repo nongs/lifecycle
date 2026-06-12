@@ -7,7 +7,7 @@
 | 빌드 | 설명 | 예시 URL |
 | :--- | :--- | :--- |
 | **demo** | localStorage, 포트폴리오 데모 | [https://limgeonhong.com/lifecycle/](https://limgeonhong.com/lifecycle/) |
-| **cloud** | Supabase·Auth 연동용 (B단계) | [https://limgeonhong.com/lifecycle-app/](https://limgeonhong.com/lifecycle-app/) *(업로드 후)* |
+| **cloud** | Supabase·Auth 연동용 (B단계) | [https://limgeonhong.com/lifecycle/](https://limgeonhong.com/lifecycle/) *(업로드 후)* |
 
 ---
 
@@ -107,7 +107,7 @@ npm run dev:cloud    # cloud — Supabase 연동 준비 안내 화면
 
 ```bash
 npm run build:demo    # → /lifecycle (데모)
-npm run build:cloud   # → /lifecycle-app (클라우드 슬롯)
+npm run build:cloud   # → /lifecycle (클라우드 슬롯)
 ```
 
 `npm run build`는 `build:demo`와 동일합니다. 결과는 **`out/`** 에 생성됩니다.
@@ -256,7 +256,7 @@ MVP는 **서버·DB 없이** 브라우저 `localStorage`에 저장합니다.
 | 빌드 명령 | variant | 기본 경로 |
 | :--- | :--- | :--- |
 | `npm run build:demo` | demo | `/lifecycle` |
-| `npm run build:cloud` | cloud | `/lifecycle-app` |
+| `npm run build:cloud` | cloud | `/lifecycle` |
 
 커스텀 예:
 
@@ -267,7 +267,7 @@ DEPLOY_BASE_PATH=/my-path npm run build:demo
 | 설정값 | 배포 URL 예시 | 서버 업로드 위치 |
 | :--- | :--- | :--- |
 | `"/lifecycle"` | `https://도메인/lifecycle/` | `lifecycle/` |
-| `"/lifecycle-app"` | `https://도메인/lifecycle-app/` | `lifecycle-app/` |
+| `"/lifecycle"` | `https://도메인/lifecycle/` | `lifecycle/` |
 | `""` | `https://도메인/` | 웹 루트 |
 
 ### 빌드 및 업로드
