@@ -158,7 +158,7 @@ export function ItemFormModal({
           <span className="text-sm text-ink-muted">
             알림 받기
             <span className="mt-0.5 block text-xs text-ink-faint">
-              푸시 알림은 추후 제공됩니다.
+              임박·지연 시 리마인더 (설정에서 푸시 알림 ON 필요)
             </span>
           </span>
         </label>

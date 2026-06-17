@@ -6,8 +6,11 @@
 
 | 빌드 | 설명 | 예시 URL |
 | :--- | :--- | :--- |
-| **demo** | localStorage, 포트폴리오 데모 | [https://limgeonhong.com/lifecycle/](https://limgeonhong.com/lifecycle/) |
-| **cloud** | Supabase·Auth 연동용 (B단계) | [https://limgeonhong.com/lifecycle/](https://limgeonhong.com/lifecycle/) *(업로드 후)* |
+| **demo** | localStorage, 포트폴리오 데모 | [limgeonhong.com/lifecycle/](https://limgeonhong.com/lifecycle/) |
+| **cloud** (web) | Supabase·이메일 OTP 로그인 | [limgeonhong.com/lifecycle/](https://limgeonhong.com/lifecycle/) |
+| **webapp:cloud** (PWA) | cloud + 설치형 앱·오프라인·리마인더 | [limgeonhong.com/lifecycle-pwa/](https://limgeonhong.com/lifecycle-pwa/) |
+
+동일 UI·코드베이스, **빌드 시점 env**로 데이터·셸만 분기합니다.
 
 ---
 
@@ -17,6 +20,7 @@
 - [기술 스택](#기술-스택)
 - [시작하기](#시작하기)
 - [사용법](#사용법)
+- [클라우드 로그인](#클라우드-로그인)
 - [프로젝트 구조](#프로젝트-구조)
 - [데이터 저장](#데이터-저장)
 - [배포 (정적 빌드)](#배포-정적-빌드)
@@ -46,14 +50,25 @@
 
 ### 통계 (`/stats`)
 
-- **요약:** 전체 기록 수, 비용 입력 기록 수, 이번 달 비용 합계
-- **월별 비용:** `performedAt` 기준 월 합계(최근 12개월), 막대 비율 표시
-- **항목별:** 목표 주기, **실제 평균 주기**(로그 2건 이상일 때 인접 수행 간격 평균), 누적 비용
+- **비용:** 요약, 월별 비용(최근 12개월), 항목별 누적·실제 평균 주기
+- **활동:** 수행 기록 기준 월간 활동 캘린더
+
+### 설정 (`/settings`) · cloud
+
+- **이메일 OTP 로그인** (8자리, 웹·PWA 동일) — 계정·로그아웃
+- 로그인 직후 로컬 → 클라우드 **1회 마이그레이션** 제안
+- 데이터 JSON **보내기/가져오기**
+- (webapp) 푸시 알림·리마인더 시각·홈 화면 추가
+
+### PWA (`build:webapp:cloud` → `/lifecycle-pwa`)
+
+- manifest·Service Worker·오프라인 셸
+- 세션 복구·오프라인 배너
+- 임박·지연 항목 **브라우저 리마인더** (앱 활성 시)
 
 ### 이후 예정
 
-- 로그인·마이페이지·멀티 디바이스 동기화
-- 푸시 알림·PWA
+- Web Push (서버·백그라운드 발송)
 
 ---
 
@@ -61,19 +76,22 @@
 
 | 구분 | 기술 |
 | :--- | :--- |
-| Framework | [Next.js](https://nextjs.org/) 15 (App Router) |
+| Framework | [Next.js](https://nextjs.org/) 15 (App Router), **정적 export** |
 | Language | TypeScript 5 |
 | UI | React 19, [Tailwind CSS](https://tailwindcss.com/) 3 |
-| 상태·데이터 | React Context, **브라우저 localStorage** (Mock API 계층) |
-| 배포 | 정적 export → 개인 도메인 서브경로 |
+| 데이터 (demo) | React Context, `localStorage` |
+| 데이터 (cloud) | [Supabase](https://supabase.com/) (PostgreSQL + RLS, 브라우저 SDK) |
+| 인증 (cloud) | Supabase Auth — **이메일 OTP** (Resend SMTP) |
+| PWA | manifest, Service Worker, Notification API |
+| 배포 | 정적 `out/` → 개인 도메인 서브경로 |
 
 ### 개발 스펙 요약
 
-- **Node.js** 18.18 이상 권장 (Next.js 15 요구사항 준수)
+- **Node.js** 18.18 이상 권장
 - **패키지 매니저:** npm
-- **라우트:** `/` (대시보드), `/items` (항목 관리), `/stats` (통계)
-- **인증:** 없음 (MVP는 `userId = 1` 고정, 고도화 시 Auth 연동 예정)
-- **날짜 계산:** 일(day) 단위, **당일 0시(자정)** 기준
+- **라우트:** `/`, `/items`, `/stats`, `/settings`, `/settings/login`
+- **인증:** cloud 빌드만 — 미로그인 시 localStorage, 로그인 시 Supabase
+- **날짜 계산:** 일(day) 단위, 당일 0시(자정) 기준
 - **주기 저장:** 내부 `targetCycleDays`(일), UI는 년/개월/주/일 입력
 
 ---
@@ -96,18 +114,29 @@ npm install
 ### 개발 서버
 
 ```bash
-npm run dev          # demo — localStorage (일상 개발)
-npm run dev:cloud    # cloud — Supabase 연동 준비 안내 화면
+npm run dev                 # demo — localStorage
+npm run dev:cloud           # cloud — Supabase (.env.local 필요)
+npm run dev:webapp:cloud    # PWA cloud — 동일 OTP 로그인 + manifest/SW
 ```
 
 브라우저에서 [http://localhost:3000](http://localhost:3000) 을 엽니다.  
 로컬 개발에는 배포용 `basePath`가 적용되지 않습니다.
 
+cloud / webapp:cloud 개발 시 `.env.local` 예시:
+
+```bash
+NEXT_PUBLIC_APP_VARIANT=cloud
+NEXT_PUBLIC_SHELL_VARIANT=webapp   # dev:webapp:cloud 만
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+```
+
 ### 정적 빌드 (배포용)
 
 ```bash
-npm run build:demo    # → /lifecycle (데모)
-npm run build:cloud   # → /lifecycle (클라우드 슬롯)
+npm run build:demo           # → /lifecycle (데모)
+npm run build:cloud          # → /lifecycle (클라우드 웹)
+npm run build:webapp:cloud   # → /lifecycle-pwa (PWA)
 ```
 
 `npm run build`는 `build:demo`와 동일합니다. 결과는 **`out/`** 에 생성됩니다.
@@ -137,14 +166,23 @@ cp .env.build.cloud.secrets.example .env.build.cloud.secrets.local
 | **데이터** | `demo` / `cloud` | localStorage vs Supabase (`NEXT_PUBLIC_DATA_VARIANT` 또는 `APP_VARIANT`) |
 | **셸** | `web` / `webapp` | 브라우저 vs PWA (`NEXT_PUBLIC_SHELL_VARIANT`, C단계) |
 
-현재 스크립트: **demo / cloud / webapp:cloud** 3종. 상세는 [로드맵 C절](./markdown/LifeCycle_Design_And_Fullstack_Roadmap.md) 참고.
+현재 스크립트: **demo / cloud / webapp:cloud** 3종.
+
+| 스크립트 | 데이터 | 셸 | `DEPLOY_BASE_PATH` |
+| :--- | :--- | :--- | :--- |
+| `build:demo` | demo | web | `/lifecycle` |
+| `build:cloud` | cloud | web | `/lifecycle` |
+| `build:webapp:cloud` | cloud | webapp | `/lifecycle-pwa` |
+
+상세: [로드맵](./markdown/LifeCycle_Design_And_Fullstack_Roadmap.md)
 
 ### 기타 스크립트
 
 | 명령 | 설명 |
 | :--- | :--- |
 | `npm run dev` | demo 개발 서버 |
-| `npm run dev:cloud` | cloud 개발 서버 (안내 UI) |
+| `npm run dev:cloud` | cloud 개발 서버 |
+| `npm run dev:webapp:cloud` | PWA cloud 개발 서버 |
 | `npm run build:demo` | demo 정적 export → `out/` |
 | `npm run build:cloud` | cloud 정적 export → `out/` |
 | `npm run build:webapp:cloud` | PWA cloud export → `out/` |
@@ -195,42 +233,79 @@ cp .env.build.cloud.secrets.example .env.build.cloud.secrets.local
 
 색상만으로 정보를 전달하지 않도록 텍스트 라벨을 함께 표시합니다.
 
+### 설정 · cloud (`/settings`)
+
+- **미로그인:** 클라우드 동기화 안내 → [인증 코드로 로그인](/settings/login)
+- **로그인 후:** 계정 이메일, 데이터 모드(로컬 캐시/클라우드), 로그아웃
+- **데이터 I/O:** JSON 보내기·가져오기 (백업·이전)
+- **PWA(webapp):** 홈 화면 추가, 푸시·리마인더 설정
+
+---
+
+## 클라우드 로그인
+
+**웹(`/lifecycle`)과 PWA(`/lifecycle-pwa`) 모두 동일한 이메일 OTP** 를 사용합니다.
+
+1. **설정** → **인증 코드로 로그인**
+2. 이메일 입력 → **인증 코드 받기**
+3. 메일의 **8자리 코드** 입력 → 로그인
+
+### 왜 OTP인가?
+
+- iOS 홈 화면 앱은 Safari와 **storage가 분리**되어, 메일 **링크**(Magic Link)로는 PWA에 세션이 전달되지 않습니다.
+- OTP는 앱·브라우저 안에서 코드만 입력하면 되므로 **웹·PWA 공통**으로 사용합니다.
+
+### Supabase·메일 설정 (운영)
+
+| 항목 | 내용 |
+| :--- | :--- |
+| DB | `supabase/schema.sql` 실행 |
+| SMTP | Resend 등 Custom SMTP (템플릿 편집에 필요) |
+| Email template | Magic Link 템플릿에 `{{ .Token }}` 포함 |
+| Redirect URLs | OTP만 쓸 경우 필수 아님 (OAuth·링크 대비 시 등록) |
+
+체크리스트: [LifeCycle_Ops_Checklist.md](./markdown/LifeCycle_Ops_Checklist.md)  
+세션 정책: [LifeCycle_Auth_Session.md](./markdown/LifeCycle_Auth_Session.md)
+
 ---
 
 ## 프로젝트 구조
 
 ```
 lifecycle/
-├── markdown/                 # 기획·개발 명세 문서
-│   ├── LifeCycle_Project_Plan.md
-│   ├── LifeCycle_Development_Plan.md
-│   ├── LifeCycle_Screen_Plan.md
-│   └── LifeCycle_MVP_Checklist.md
+├── markdown/                 # 기획·로드맵·운영 체크리스트
+├── supabase/
+│   └── schema.sql            # cloud DB + RLS
+├── public/
+│   ├── sw.js                 # PWA Service Worker
+│   └── icons/
 ├── src/
-│   ├── app/                  # Next.js App Router 페이지
+│   ├── app/
 │   │   ├── page.tsx          # 대시보드
-│   │   ├── items/page.tsx    # 항목 관리
-│   │   └── stats/page.tsx    # 통계
-│   ├── components/           # UI 컴포넌트·모달
-│   ├── contexts/             # DataProvider (전역 데이터)
-│   ├── hooks/
+│   │   ├── items/            # 항목 관리
+│   │   ├── stats/            # 통계·활동 캘린더
+│   │   ├── settings/         # 설정·로그인
+│   │   └── manifest.ts       # PWA manifest (webapp 빌드)
+│   ├── components/
+│   │   ├── shell/            # PWA·오프라인·리마인더
+│   │   └── settings/
+│   ├── contexts/             # Auth, Data
 │   └── lib/
 │       ├── api/              # IDataService · demo/cloud 분기
-│       │   ├── index.ts
-│       │   ├── localStorageService.ts
-│       │   └── cloudPlaceholderService.ts
-│       ├── utils/            # 날짜·주기·대시보드·통계 등
-│       ├── types.ts
-│       └── seed.ts           # 카테고리 시드
-├── package.json
-└── README.md
+│       ├── supabase/         # client, emailAuth (OTP)
+│       ├── data/             # 동기화·I/O·마이그레이션
+│       └── notifications/    # 리마인더
+├── .env.build.*              # 빌드 variant
+└── package.json
 ```
 
 ---
 
 ## 데이터 저장
 
-MVP는 **서버·DB 없이** 브라우저 `localStorage`에 저장합니다.
+### demo 빌드
+
+브라우저 **localStorage**만 사용합니다 (서버·DB 없음).
 
 | 키 | 내용 |
 | :--- | :--- |
@@ -238,10 +313,16 @@ MVP는 **서버·DB 없이** 브라우저 `localStorage`에 저장합니다.
 | `lifecycle:items` | 관리 항목 |
 | `lifecycle:logs` | 수행 기록 |
 
-- **demo** 빌드: 브라우저 `localStorage` (`localStorageService`).
-- **cloud** 빌드: B-1에서 Supabase 구현체로 교체 (`@/lib/api` 진입점 동일).
-- 컴포넌트는 `@/lib/api`만 import 합니다.
-- 브라우저 데이터를 지우면 저장 내용도 초기화됩니다. 시드 카테고리는 다시 생성됩니다.
+### cloud 빌드
+
+| 상태 | 저장소 |
+| :--- | :--- |
+| **미로그인** | localStorage (이 기기만) |
+| **로그인** | Supabase (RLS) + 오프라인용 local 캐시 |
+| **로그아웃** | 클라우드 스냅샷 → local 후 세션 종료 |
+
+- 컴포넌트는 `@/lib/api`만 import — 구현체는 빌드·로그인 상태로 자동 분기
+- 브라우저 데이터 삭제 시 local 내용 초기화 (cloud는 재로그인 후 동기화)
 
 ---
 
@@ -253,10 +334,11 @@ MVP는 **서버·DB 없이** 브라우저 `localStorage`에 저장합니다.
 
 빌드 스크립트의 **`DEPLOY_BASE_PATH`** 또는 `next.config.ts` 기본값을 수정합니다.
 
-| 빌드 명령 | variant | 기본 경로 |
-| :--- | :--- | :--- |
-| `npm run build:demo` | demo | `/lifecycle` |
-| `npm run build:cloud` | cloud | `/lifecycle` |
+| 빌드 명령 | variant | 기본 경로 | 업로드 예 |
+| :--- | :--- | :--- | :--- |
+| `npm run build:demo` | demo | `/lifecycle` | `.../lifecycle/` |
+| `npm run build:cloud` | cloud | `/lifecycle` | `.../lifecycle/` |
+| `npm run build:webapp:cloud` | cloud + PWA | `/lifecycle-pwa` | `.../lifecycle-pwa/` |
 
 커스텀 예:
 
@@ -272,13 +354,15 @@ DEPLOY_BASE_PATH=/my-path npm run build:demo
 
 ### 빌드 및 업로드
 
-1. 용도에 맞게 `build:demo` 또는 `build:cloud` 실행.
+1. 용도에 맞게 `build:demo` / `build:cloud` / `build:webapp:cloud` 실행
 
 2. **`out/`** 내용을 서버 **동일 경로**에 업로드.
 
-3. 웹 서버 alias 설정 (Apache/Nginx 등).
+3. 웹 서버에서 해당 경로로 정적 파일 서빙
 
-> **참고:** 데이터는 브라우저 **localStorage**에만 저장됩니다. 기기·브라이저마다 다르며, 서버에는 올라가지 않습니다.
+cloud·PWA는 빌드 전 `.env.build.cloud.secrets.local`에 Supabase 키가 있어야 합니다.
+
+> **demo:** localStorage만. **cloud:** 로그인 후 Supabase 저장.
 
 ---
 
@@ -290,8 +374,9 @@ DEPLOY_BASE_PATH=/my-path npm run build:demo
 | 2 | 통계 — 평균 주기, 비용 집계 (`/stats`) | ✅ |
 | A-1 | 디자인 마무리 (토큰·UI·Empty·모바일 QA) | ✅ |
 | A-2 | **demo/cloud** 데이터 분기 | ✅ |
-| C | **web / webapp** 셸 분기 (PWA) | 예정 (B-1·B-2 후) |
-| 3 | 고도화 — Auth, 클라우드 DB, 알림, PWA, 마이페이지 (`cloud`만) | 예정 |
+| B | Auth·Supabase·설정·동기화 | ✅ |
+| C | **web / webapp** PWA·리마인더·OTP 로그인 | ✅ (Web Push 후순위) |
+| — | OAuth, Realtime 동기화 | 예정 |
 
 상세 단계·체크리스트: [LifeCycle_Design_And_Fullstack_Roadmap.md](./markdown/LifeCycle_Design_And_Fullstack_Roadmap.md)
 
@@ -308,7 +393,10 @@ DEPLOY_BASE_PATH=/my-path npm run build:demo
 | [LifeCycle_Screen_Plan.md](./markdown/LifeCycle_Screen_Plan.md) | 화면·플로우·IA |
 | [LifeCycle_MVP_Checklist.md](./markdown/LifeCycle_MVP_Checklist.md) | MVP 구현 체크리스트 |
 | [LifeCycle_Stats_Plan.md](./markdown/LifeCycle_Stats_Plan.md) | 통계 화면·집계 규칙 |
-| [LifeCycle_Design_And_Fullstack_Roadmap.md](./markdown/LifeCycle_Design_And_Fullstack_Roadmap.md) | 디자인 마무리 · demo/cloud 이중 배포 · 풀스택 단계 |
+| [LifeCycle_Design_And_Fullstack_Roadmap.md](./markdown/LifeCycle_Design_And_Fullstack_Roadmap.md) | 디자인 · demo/cloud · PWA 로드맵 |
+| [LifeCycle_Ops_Checklist.md](./markdown/LifeCycle_Ops_Checklist.md) | Supabase SMTP·배포·검증 체크리스트 |
+| [LifeCycle_Auth_Session.md](./markdown/LifeCycle_Auth_Session.md) | 로그인 세션·PWA 정책 |
+| [LifeCycle_Cloud_Data_Sync.md](./markdown/LifeCycle_Cloud_Data_Sync.md) | 로컬↔클라우드 동기화 |
 
 ### 참고·영감
 

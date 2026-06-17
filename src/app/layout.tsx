@@ -1,6 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
+import { OfflineBanner } from "@/components/shell/OfflineBanner";
+import { PwaLifecycle } from "@/components/shell/PwaLifecycle";
+import { ReminderScheduler } from "@/components/shell/ReminderScheduler";
 import { PwaRegister } from "@/components/shell/PwaRegister";
+import { SessionRecoveryBanner } from "@/components/shell/SessionRecoveryBanner";
 import { PostLoginHandler } from "@/components/auth/PostLoginHandler";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DataProvider } from "@/contexts/DataContext";
@@ -30,6 +34,10 @@ export const metadata: Metadata = {
   }),
 };
 
+export const viewport: Viewport = isWebAppShell
+  ? { themeColor: "#587662" }
+  : {};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -42,6 +50,10 @@ export default function RootLayout({
         <VariantGate>
           <AuthProvider>
             <DataProvider>
+              <PwaLifecycle />
+              <ReminderScheduler />
+              <SessionRecoveryBanner />
+              <OfflineBanner />
               <PostLoginHandler />
               <main className="mx-auto min-h-dvh max-w-lg pb-24">{children}</main>
               <BottomNav />

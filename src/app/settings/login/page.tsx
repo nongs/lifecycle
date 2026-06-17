@@ -8,16 +8,21 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { PageLoading } from "@/components/ui/PageLoading";
 import { useAuth } from "@/contexts/AuthContext";
-import { sendMagicLink } from "@/lib/supabase/magicLink";
-import { getAuthRedirectUrl } from "@/lib/appUrl";
-import { isCloudBackendReady } from "@/lib/variant";
+import {
+  EMAIL_OTP_DIGIT_LENGTH,
+  sendEmailOtp,
+  verifyEmailOtp,
+} from "@/lib/supabase/emailAuth";
+import { isCloudBackendReady, isWebAppFeaturesEnabled } from "@/lib/variant";
 
 export default function SettingsLoginPage() {
   const router = useRouter();
   const { authReady, isAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,13 +50,43 @@ export default function SettingsLoginPage() {
     return <PageLoading />;
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const trimmedEmail = email.trim();
+  const showPwaHint = isWebAppFeaturesEnabled();
+
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
     setError(null);
     try {
-      await sendMagicLink(email);
-      setSent(true);
+      await sendEmailOtp(trimmedEmail);
+      setCodeSent(true);
+      setOtp("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "전송에 실패했습니다.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setVerifying(true);
+    setError(null);
+    try {
+      await verifyEmailOtp(trimmedEmail, otp);
+      router.replace("/settings");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "인증에 실패했습니다.");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setSending(true);
+    setError(null);
+    try {
+      await sendEmailOtp(trimmedEmail);
     } catch (err) {
       setError(err instanceof Error ? err.message : "전송에 실패했습니다.");
     } finally {
@@ -70,35 +105,81 @@ export default function SettingsLoginPage() {
         </Link>
         <h1 className="mt-3 text-2xl font-semibold text-ink">이메일 로그인</h1>
         <p className="page-header-sub">
-          Magic Link로 비밀번호 없이 로그인합니다.
+          메일로 받은 {EMAIL_OTP_DIGIT_LENGTH}자리 인증 코드를 입력합니다.
+          브라우저·홈 화면 앱 모두 같은 방식입니다.
         </p>
       </header>
 
-      {sent ? (
-        <Card className="space-y-3 p-5 text-sm text-ink-muted">
-          <p className="font-medium text-ink">메일을 확인해 주세요</p>
-          <p>
-            <strong className="text-ink">{email.trim()}</strong>로 로그인
-            링크를 보냈습니다. 메일의 링크를 누르면 이 앱으로 돌아옵니다.
-          </p>
-          <p className="text-xs text-ink-faint">
-            링크가 동작하지 않으면 Supabase 대시보드 Redirect URLs에{" "}
-            <code className="break-all rounded bg-accent-soft px-1">
-              {getAuthRedirectUrl()}
-            </code>
-            가 등록되어 있는지 확인하세요.
-          </p>
-          <Button
-            variant="secondary"
-            fullWidth
-            className="mt-2"
-            onClick={() => setSent(false)}
-          >
-            다른 이메일로 받기
-          </Button>
+      {showPwaHint && (
+        <Card className="mb-4 border-primary/20 bg-primary/5 p-4 text-xs leading-relaxed text-ink-muted">
+          홈 화면 앱(iOS·Android)에서는 메일 <strong className="text-ink">링크</strong>
+          가 브라우저에서 열릴 수 있어 로그인이 이어지지 않습니다. 메일의{" "}
+          <strong className="text-ink">인증 코드</strong>를 아래에 입력해 주세요.
         </Card>
+      )}
+
+      {codeSent ? (
+        <form onSubmit={(e) => void handleVerify(e)} className="space-y-4">
+          <Card className="space-y-3 p-5 text-sm text-ink-muted">
+            <p className="font-medium text-ink">인증 코드를 입력하세요</p>
+            <p>
+              <strong className="text-ink">{trimmedEmail}</strong>로{" "}
+              {EMAIL_OTP_DIGIT_LENGTH}자리 코드를 보냈습니다. 메일함·스팸함을
+              확인해 주세요.
+            </p>
+          </Card>
+          <Input
+            label="인증 코드"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="[0-9]*"
+            maxLength={EMAIL_OTP_DIGIT_LENGTH}
+            placeholder={"0".repeat(EMAIL_OTP_DIGIT_LENGTH)}
+            value={otp}
+            onChange={(e) =>
+              setOtp(
+                e.target.value
+                  .replace(/\D/g, "")
+                  .slice(0, EMAIL_OTP_DIGIT_LENGTH)
+              )
+            }
+            required
+          />
+          {error && <p className="text-sm text-danger">{error}</p>}
+          <Button
+            type="submit"
+            fullWidth
+            disabled={verifying || otp.length < EMAIL_OTP_DIGIT_LENGTH}
+          >
+            {verifying ? "확인 중…" : "로그인"}
+          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              fullWidth
+              disabled={sending}
+              onClick={() => void handleResend()}
+            >
+              {sending ? "전송 중…" : "코드 다시 받기"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              fullWidth
+              onClick={() => {
+                setCodeSent(false);
+                setOtp("");
+                setError(null);
+              }}
+            >
+              다른 이메일로 받기
+            </Button>
+          </div>
+        </form>
       ) : (
-        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+        <form onSubmit={(e) => void handleSendCode(e)} className="space-y-4">
           <Input
             label="이메일"
             type="email"
@@ -111,7 +192,7 @@ export default function SettingsLoginPage() {
           />
           {error && <p className="text-sm text-danger">{error}</p>}
           <Button type="submit" fullWidth disabled={sending}>
-            {sending ? "전송 중…" : "로그인 링크 받기"}
+            {sending ? "전송 중…" : "인증 코드 받기"}
           </Button>
         </form>
       )}

@@ -7,6 +7,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { resetCloudSeedCache } from "@/lib/api/supabaseSeed";
@@ -23,6 +24,8 @@ interface AuthContextValue {
   session: Session | null;
   user: User | null;
   isAuthenticated: boolean;
+  /** refresh 실패 등으로 세션이 끊긴 경우 (명시적 로그아웃 제외) */
+  needsReauth: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -32,6 +35,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const cloudAuth = isCloudBackendReady();
   const [authReady, setAuthReady] = useState(!cloudAuth);
   const [session, setSession] = useState<Session | null>(null);
+  const [needsReauth, setNeedsReauth] = useState(false);
+  const explicitSignOutRef = useRef(false);
+  const wasAuthenticatedRef = useRef(false);
 
   useEffect(() => {
     if (!cloudAuth) return;
@@ -41,6 +47,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     getCloudSession().then((s) => {
       if (!cancelled) {
         setSession(s);
+        if (isAuthenticatedSession(s)) {
+          wasAuthenticatedRef.current = true;
+        }
         setAuthReady(true);
       }
     });
@@ -48,20 +57,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const supabase = getSupabase();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === "SIGNED_IN" && isAuthenticatedSession(nextSession)) {
+        wasAuthenticatedRef.current = true;
+        setNeedsReauth(false);
+      }
+
+      if (event === "SIGNED_OUT") {
+        if (wasAuthenticatedRef.current && !explicitSignOutRef.current) {
+          setNeedsReauth(true);
+        }
+        if (explicitSignOutRef.current) {
+          explicitSignOutRef.current = false;
+          wasAuthenticatedRef.current = false;
+          setNeedsReauth(false);
+        }
+      }
+
+      if (event === "TOKEN_REFRESHED" && isAuthenticatedSession(nextSession)) {
+        setNeedsReauth(false);
+      }
+
       setSession(nextSession);
       setAuthReady(true);
     });
 
+    const syncSession = () => {
+      void getCloudSession().then((s) => {
+        if (!cancelled) setSession(s);
+      });
+    };
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") syncSession();
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", syncSession);
+
     return () => {
       cancelled = true;
       subscription.unsubscribe();
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", syncSession);
     };
   }, [cloudAuth]);
 
   const signOut = useCallback(async () => {
     if (!cloudAuth) return;
 
+    explicitSignOutRef.current = true;
     const session = await getCloudSession();
     if (isAuthenticatedSession(session)) {
       await snapshotCloudToLocal();
@@ -78,9 +123,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session,
       user: session?.user ?? null,
       isAuthenticated: isAuthenticatedSession(session),
+      needsReauth,
       signOut,
     }),
-    [authReady, session, signOut]
+    [authReady, session, needsReauth, signOut]
   );
 
   return (

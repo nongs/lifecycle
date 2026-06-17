@@ -167,20 +167,21 @@ src/lib/api/
 
 ### B-2. Auth + `/settings` — ✅ 완료 (SMTP·OAuth는 운영 체크리스트)
 
-- [x] Supabase Auth — 이메일 Magic Link
+- [x] Supabase Auth — 이메일 OTP (웹·PWA 동일)
 - [x] `/settings` — 로그인 패널, 계정·로그아웃, 푸시 스위치, 데이터 I/O
-- [x] `/settings/login` — Magic Link 발송
+- [x] `/settings/login` — 8자리 인증 코드
 - [x] 로그인 직후 로컬→cloud 마이그레이션 모달
 - [x] 미로그인 → localStorage / 로그인 → Supabase
 - [ ] **Custom SMTP** — 나중 ([`LifeCycle_Ops_Checklist.md`](./LifeCycle_Ops_Checklist.md))
 - [ ] OAuth — 추후
 - [ ] `userId: 1` → JWT `sub` (타입 정리, 선택)
+- [x] 세션 유지 정책·PWA 보완 체크리스트 — [`LifeCycle_Auth_Session.md`](./LifeCycle_Auth_Session.md)
 
 ### B-3. 동기화·알림 (5~7일, 선택)
 
 - [ ] 멀티 디바이스: cloud만 (실시간은 Supabase Realtime 또는 폴링)
-- [ ] `notificationEnabled` + 브라우저 Notification / (후순위) 푸시
-- [ ] PWA manifest — **cloud 빌드**에만 manifest URL이 basePath 맞게
+- [x] `notificationEnabled` + 브라우저 Notification (webapp 리마인더) / (후순위) Web Push
+- [x] PWA manifest — **webapp 빌드**에만 standalone·basePath 반영 (`manifest.ts`)
 
 ### B-4. 운영·학습 정리
 
@@ -248,13 +249,21 @@ if (isWebAppFeaturesEnabled() && isCloudBackendReady()) {
 }
 ```
 
-### C-1. webapp + cloud (진행 중)
+### C-1. webapp + cloud — ✅ 완료
 
 - [x] `build:webapp:cloud` / `dev:webapp:cloud` + `DEPLOY_BASE_PATH=/lifecycle-pwa`
 - [x] `manifest.ts` + 아이콘 + `display: standalone` (webapp 빌드만)
-- [x] Service Worker 등록 (`public/sw.js`, `PwaRegister`)
-- [ ] 설치 유도 UI (`InstallPrompt`)
-- [ ] cloud + webapp: Web Push / Notification API (C-2)
+- [x] Service Worker (`public/sw.js` 셸 precache·오프라인 네비게이션)
+- [x] `PwaLifecycle` · `OfflineBanner` · `SessionRecoveryBanner`
+- [x] 세션 refresh 실패 → 재로그인 안내
+- [x] 통계 활동 캘린더
+- [x] 설정 화면 「홈 화면에 추가」 (`PwaInstallCard`, `beforeinstallprompt`·iOS 안내)
+
+### C-2. 푸시 알림 — ✅ (클라이언트 리마인더)
+
+- [x] `notificationEnabled` + 임박·지연 리마인더 (`ReminderScheduler`, SW `showNotification`)
+- [x] 설정 푸시 스위치 → Notification 권한 + 리마인더 시각
+- [ ] Web Push (서버·VAPID) — 후순위
 
 ---
 
@@ -283,12 +292,12 @@ if (isWebAppFeaturesEnabled() && isCloudBackendReady()) {
 5. [x] README·`.env.example` 두 variant 안내
 6. [ ] 서버 `/lifecycle` 업로드 (운영)
 
-### 다음 → C-1 PWA (webapp + cloud)
+### C-1 PWA (webapp + cloud) — ✅ 완료
 
 7. [x] B-1 Supabase + API
 8. [x] B-2 Auth + `/settings` + 데이터 I/O
-9. [ ] C-1 PWA manifest·SW (`dev:webapp:cloud`)
-10. [ ] C-2 푸시 알림 (선택)
+9. [x] C-1 PWA manifest·SW·세션 보완 (`build:webapp:cloud`)
+10. [x] C-2 푸시 알림 (클라이언트 리마인더)
 11. [ ] SMTP·OAuth — [`LifeCycle_Ops_Checklist.md`](./LifeCycle_Ops_Checklist.md)
 
 ---

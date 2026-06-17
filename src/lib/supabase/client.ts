@@ -17,6 +17,9 @@ export function getSupabase(): SupabaseClient {
     auth: {
       detectSessionInUrl: true,
       flowType: "pkce",
+      persistSession: true,
+      autoRefreshToken: true,
+      // 로그아웃 전까지 세션 유지 (PWA·브라우저 공통). 정책: LifeCycle_Auth_Session.md
     },
   });
   return client;

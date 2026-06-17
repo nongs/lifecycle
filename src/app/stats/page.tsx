@@ -3,9 +3,14 @@
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { useData } from "@/contexts/DataContext";
+import { ActivityCalendar } from "@/components/stats/ActivityCalendar";
 import { MonthlySpendAllModal } from "@/components/stats/MonthlySpendAllModal";
 import { MonthlySpendDetailModal } from "@/components/stats/MonthlySpendDetailModal";
 import { MonthlySpendRow } from "@/components/stats/MonthlySpendRow";
+import {
+  StatsViewTabs,
+  type StatsViewTab,
+} from "@/components/stats/StatsViewTabs";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -26,6 +31,7 @@ const MONTHLY_PREVIEW_LIMIT = 3;
 
 export default function StatsPage() {
   const { ready, items, archivedItems, logs, categories } = useData();
+  const [view, setView] = useState<StatsViewTab>("spend");
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [allMonthsOpen, setAllMonthsOpen] = useState(false);
 
@@ -132,6 +138,23 @@ export default function StatsPage() {
         </ul>
       </Card>
 
+      <StatsViewTabs value={view} onChange={setView} />
+
+      {view === "activity" ? (
+        <section aria-labelledby="activity-calendar-heading">
+          <h2 id="activity-calendar-heading" className="sr-only">
+            활동 캘린더
+          </h2>
+          <ActivityCalendar
+            logs={logs}
+            itemName={itemName}
+            categoryNameByItemId={categoryNameByItemId}
+          />
+        </section>
+      ) : null}
+
+      {view === "spend" ? (
+      <>
       <section className="mb-6" aria-labelledby="monthly-spend-heading">
         <div className="mb-3 flex items-center justify-between gap-2">
           <h2 id="monthly-spend-heading" className="text-sm font-semibold text-ink">
@@ -227,6 +250,8 @@ export default function StatsPage() {
           </ul>
         )}
       </section>
+      </>
+      ) : null}
 
       <MonthlySpendDetailModal
         open={!!selectedMonth}
