@@ -53,7 +53,7 @@ export function Modal({
       />
       <div
         ref={panelRef}
-        className={`relative z-10 flex w-full flex-col bg-surface shadow-modal ${panelClass}`}
+        className={`relative z-10 flex w-full min-w-0 flex-col bg-surface shadow-modal ${panelClass}`}
       >
         <div className="flex items-center justify-between border-b border-line px-4 py-3.5">
           <h2 id="modal-title" className="text-lg font-semibold text-ink">
@@ -68,7 +68,7 @@ export function Modal({
             ✕
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-4 py-4">{children}</div>
+        <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-4">{children}</div>
       </div>
     </div>
   );

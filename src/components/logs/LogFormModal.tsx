@@ -74,9 +74,11 @@ export function LogFormModal({
 
   return (
     <Modal open={open} onClose={onClose} title={log ? "수행 기록 수정" : "수행 완료"}>
-      <p className="mb-4 text-sm text-ink-muted">{itemName}</p>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <label className="block">
+      <h3 className="mb-5 text-xl font-semibold leading-snug text-ink sm:text-2xl">
+        {itemName}
+      </h3>
+      <form onSubmit={handleSubmit} className="min-w-0 space-y-4">
+        <label className="block min-w-0">
           <span className="label-text">수행일</span>
           <input
             type="date"

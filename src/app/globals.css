@@ -82,9 +82,17 @@
   .input-field,
   .select-field,
   .textarea-field {
-    @apply w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink
+    @apply box-border w-full min-w-0 max-w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink
       placeholder:text-ink-faint transition-colors
       focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20;
+  }
+
+  /* iOS 등: type=date 네이티브 컨트롤이 모달 밖으로 넘치는 것 방지 */
+  .input-field[type="date"] {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-height: 2.75rem;
   }
 
   .textarea-field {
